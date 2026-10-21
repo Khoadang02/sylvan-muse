@@ -6,8 +6,9 @@
   "use strict";
 
   const CONFIG = {
-    // TODO: your Formspree form ID — the part after /f/ in https://formspree.io/f/xxxxxxxx
-    formspreeId: "YOUR_FORM_ID",
+    // Notes are emailed here via FormSubmit (https://formsubmit.co). After activating,
+    // you can swap the address for the random alias FormSubmit gives you.
+    noteEmail: "tranhuuthuc02@gmail.com",
     // "Holocene" by Bon Iver, official upload — from https://www.youtube.com/watch?v=TWcyIpul8OE
     youtubeVideoId: "TWcyIpul8OE",
     musicVolume: 60,
@@ -300,21 +301,25 @@
     try {
       if (form._gotcha.value) {
         // bot: pretend all is well
-      } else if (!CONFIG.formspreeId || CONFIG.formspreeId === "YOUR_FORM_ID") {
-        console.warn("[Sylvan Muse] Formspree ID not set — note not sent:", note);
-        await new Promise((r) => setTimeout(r, 600));
       } else {
-        const res = await fetch(`https://formspree.io/f/${CONFIG.formspreeId}`, {
+        const res = await fetch(`https://formsubmit.co/ajax/${CONFIG.noteEmail}`, {
           method: "POST",
           headers: { Accept: "application/json", "Content-Type": "application/json" },
           body: JSON.stringify({
             _subject: `♥ ${t("gallery.name")} — a visitor loved it`,
+            _template: "box",
             loved: "yes",
             message: note || "(no note — just love)",
             language: state.lang,
           }),
         });
-        if (!res.ok) throw new Error(`Formspree ${res.status}`);
+        const data = await res.json().catch(() => ({}));
+        // Before the address is activated FormSubmit answers success:"false" and emails an activation link.
+        const needsActivation = /activat/i.test(data.message || "");
+        if (!res.ok || (String(data.success) !== "true" && !needsActivation)) {
+          throw new Error(`FormSubmit ${res.status}: ${data.message || ""}`);
+        }
+        if (needsActivation) console.warn("[Sylvan Muse]", data.message);
       }
       form.hidden = true;
       showThanks(t("farewell.thanksYes"));

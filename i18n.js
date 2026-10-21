@@ -26,11 +26,11 @@ window.TRANSLATIONS = {
     story: {
       label: "Câu chuyện phía sau bức ảnh",
       lines: [
-        "Trên một con đường mòn yên tĩnh, sâu trong rừng,\nanh không tìm kiếm điều gì cả.",
+        "Trên một con đường mòn yên tĩnh, sâu trong rừng,\nanh ấy không tìm kiếm điều gì cả.",
         "Rồi giữa những tán cây,\nmột bông hoa đón lấy ánh sáng.",
-        "Anh dừng lại. Nín thở.",
+        "Anh ấy dừng lại. Nín thở.",
         "Và bấm máy.",
-        "Đây là những gì anh đã thấy.",
+        "Đây là những gì tác giả đã thấy.",
       ],
     },
     hall: {
@@ -38,8 +38,8 @@ window.TRANSLATIONS = {
         "Một cô gái mặc áo khoác ô liu đi một mình trên con đường mòn phủ lá, giữa những thân cây cao ngập nắng vàng cuối thu.",
       placardLabel: "Thông tin tác phẩm",
       titleLabel: "Tác phẩm",
-      photographerLabel: "Nhiếp ảnh",
-      placeLabel: "Địa điểm",
+      photographerLabel: "Chụp bởi",
+      placeLabel: "Chụp tại",
       yearLabel: "Ngày chụp",
       artworkTitle: "Nơi thơ nở",
       photographer: "Khoazd",

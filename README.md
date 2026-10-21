@@ -11,7 +11,7 @@ No build step: `index.html`, `style.css`, `script.js`, `i18n.js`, `assets/`.
 | What | Where |
 | --- | --- |
 | All visible text, placard details, poem (VI original, EN draft) | `i18n.js` |
-| Formspree form ID (**still to set**) | `script.js` → `CONFIG.formspreeId` |
+| Email that receives visitors' notes | `script.js` → `CONFIG.noteEmail` |
 | YouTube video (official "Holocene") | `script.js` → `CONFIG.youtubeVideoId` |
 
 Run it locally (any static server works):
@@ -22,18 +22,15 @@ npx http-server@14.1.1 -p 5173 -c-1
 
 Then open http://localhost:5173. Open the page over http, not `file://`, because the YouTube player needs a real origin.
 
-## 1. Set up Formspree (free)
+## 1. Visitor notes by email (FormSubmit, free, no sign-up)
 
-1. Sign up at https://formspree.io with the email address that should receive the notes.
-2. Click **+ New Form**, name it "Sylvan Muse", and keep the email target as your address.
-3. Copy the form endpoint, e.g. `https://formspree.io/f/xyzabcd`. The ID is the last part: `xyzabcd`.
-4. In `script.js` set `formspreeId: "xyzabcd"`.
-5. Deploy (below), visit the live site, choose **Yes, I love it**, and send a test note. The first submission
-   triggers a confirmation email from Formspree; confirm it, and later notes go straight to your inbox.
-6. Optional: under the form's **Settings → Restrict to domain**, add your live domain so other sites can't post to it.
+Notes are sent through https://formsubmit.co to the address in `CONFIG.noteEmail`.
 
-The free plan allows 50 submissions a month. Until an ID is set, the site still shows the thank-you message
-and logs a warning in the console instead of sending.
+1. On the live site, choose **Yes, I love it** and send a test note.
+2. FormSubmit emails that address an **Activate Form** link (check spam too). Click it once.
+   The test note itself is not delivered; every note after activation is.
+3. Optional, to keep the address out of the page source: the activation email/page gives you a random
+   alias (e.g. `a1b2c3d4e5...`). Put that in `CONFIG.noteEmail` instead of the address.
 
 ## 2. Deploy on GitHub Pages (start here)
 
@@ -77,4 +74,4 @@ Each push to `main` redeploys automatically.
    (`gallery` → `sylvan-muse.pages.dev`) at your DNS provider.
 3. HTTPS is issued automatically.
 
-After switching domains, add the new domain to Formspree's **Restrict to domain** list.
+After switching domains, send one test note from the new domain; FormSubmit may ask to activate it again.
