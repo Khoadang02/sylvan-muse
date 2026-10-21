@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Sylvan Muse</title>
+  <meta name="description" content="A small gallery: one photograph, one poem, and a forest.">
+  <meta name="theme-color" content="#0d0b08">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Sylvan Muse — Where the Poem Blooms">
+  <meta property="og:description" content="Đại ngàn ôm bóng nhỏ, thơ nở giữa rừng cây… · A small gallery in the forest.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d0b08'/%3E%3Ccircle cx='32' cy='32' r='18' fill='%23dcae63' opacity='.25'/%3E%3Cpath d='M32 14c9 8 9 28 0 36c-9-8-9-28 0-36z' fill='%23dcae63'/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap">
+
+  <!-- Warm the main artwork while visitors are still in Scenes 1–3 -->
+  <link rel="preload" as="image" href="assets/forest-trail.webp" type="image/webp">
+
+  <link rel="stylesheet" href="style.css">
+  <script src="i18n.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="bloom" id="bloom" aria-hidden="true"></div>
+  <canvas class="ambient" id="ambient" aria-hidden="true"></canvas>
+
+  <main id="gallery">
+
+    <!-- Scene 1 — Threshold -->
+    <section class="scene scene--threshold is-active" id="scene-threshold" data-scene="threshold" aria-labelledby="gallery-name">
+      <div class="threshold__glow" aria-hidden="true"></div>
+      <h1 class="threshold__name" id="gallery-name" data-i18n="gallery.name"></h1>
+      <p class="threshold__prompt">
+        <span lang="vi" data-i18n-lang="vi" data-i18n="threshold.prompt"></span>
+        <span class="dot" aria-hidden="true">·</span>
+        <span lang="en" data-i18n-lang="en" data-i18n="threshold.prompt"></span>
+      </p>
+      <div class="threshold__choices">
+        <button type="button" class="choice" data-lang="vi" lang="vi" data-i18n-lang="vi" data-i18n="threshold.choiceVi"></button>
+        <button type="button" class="choice" data-lang="en" lang="en" data-i18n-lang="en" data-i18n="threshold.choiceEn"></button>
+      </div>
+    </section>
+
+    <!-- Scene 2 — Entrance hall -->
+    <section class="scene scene--entrance" id="scene-entrance" data-scene="entrance" aria-labelledby="welcome">
+      <h2 class="entrance__welcome" id="welcome" tabindex="-1">
+        <span class="entrance__line" data-i18n="entrance.welcome"></span>
+        <span class="entrance__line entrance__line--2" data-i18n="entrance.line2"></span>
+      </h2>
+      <button type="button" class="cue" data-action="next">
+        <span data-i18n="entrance.cue"></span>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </section>
+
+    <!-- Scene 3 — The inspiration -->
+    <section class="scene scene--story" id="scene-story" data-scene="story" data-i18n-attr="aria-label:story.label">
+      <svg class="trail" viewBox="0 0 1200 800" preserveAspectRatio="none" aria-hidden="true">
+        <path id="trail-path" d="M-20 690 C 140 640, 210 720, 330 650 S 520 520, 610 560 S 780 640, 860 520 S 990 330, 1060 300 S 1180 220, 1230 140" />
+      </svg>
+      <ol class="wall-text" id="wall-text" aria-live="polite"></ol>
+    </section>
+
+    <!-- Scene 4 — The main hall -->
+    <section class="scene scene--hall" id="scene-hall" data-scene="hall" aria-labelledby="artwork-title">
+      <figure class="artwork" id="artwork">
+        <div class="artwork__frame">
+          <picture>
+            <source srcset="assets/forest-trail.webp" type="image/webp">
+            <img src="assets/forest-trail.jpg" width="1098" height="1560" decoding="async" data-i18n-attr="alt:hall.imageAlt" alt="">
+          </picture>
+          <div class="artwork__spotlight" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <div class="hall__panel">
+        <aside class="placard" data-i18n-attr="aria-label:hall.placardLabel">
+          <h2 class="placard__title" id="artwork-title" data-i18n="hall.artworkTitle"></h2>
+          <dl class="placard__meta">
+            <div><dt data-i18n="hall.photographerLabel"></dt><dd data-i18n="hall.photographer"></dd></div>
+            <div><dt data-i18n="hall.placeLabel"></dt><dd data-i18n="hall.place"></dd></div>
+            <div><dt data-i18n="hall.yearLabel"></dt><dd data-i18n="hall.year"></dd></div>
+          </dl>
+        </aside>
+
+        <div class="poem" id="poem" data-i18n-attr="aria-label:hall.poemLabel" aria-live="polite"></div>
+
+        <!-- Scene 5 — The question -->
+        <div class="question" id="question" role="group" aria-labelledby="question-prompt" hidden>
+          <p class="question__prompt" id="question-prompt" data-i18n="question.prompt"></p>
+          <div class="question__choices">
+            <button type="button" class="pill pill--warm" data-answer="yes" data-i18n="question.yes"></button>
+            <button type="button" class="pill" data-answer="no" data-i18n="question.no"></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scene 6 — Farewell -->
+    <section class="scene scene--farewell" id="scene-farewell" data-scene="farewell" aria-labelledby="farewell-thanks">
+      <div class="petals" id="petals" aria-hidden="true"></div>
+      <div class="farewell__inner">
+        <svg class="heart" id="heart" viewBox="0 0 64 58" width="56" height="51" aria-hidden="true">
+          <path d="M32 54 C 12 40, 3 29, 3 17 C 3 8, 10 3, 17.5 3 C 24 3, 29 7, 32 13 C 35 7, 40 3, 46.5 3 C 54 3, 61 8, 61 17 C 61 29, 52 40, 32 54 Z"/>
+        </svg>
+
+        <form class="note-form" id="note-form" novalidate hidden>
+          <label for="note" class="note-form__label" data-i18n="farewell.noteLabel"></label>
+          <textarea id="note" name="note" rows="4" maxlength="2000" data-i18n-attr="placeholder:farewell.notePlaceholder"></textarea>
+          <!-- Honeypot for bots; humans never see it -->
+          <input type="text" name="_gotcha" class="visually-hidden" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button type="submit" class="pill pill--warm" id="note-send" data-i18n="farewell.send"></button>
+          <p class="note-form__error" id="note-error" role="alert" hidden data-i18n="farewell.error"></p>
+        </form>
+
+        <p class="farewell__thanks" id="farewell-thanks" tabindex="-1" aria-live="polite"></p>
+
+        <button type="button" class="again" id="again" data-i18n="farewell.again" hidden></button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Music card: the YouTube player stays visible, per YouTube's terms -->
+  <div class="music" id="music" hidden>
+    <div class="music__player"><div id="yt-player"></div></div>
+    <div class="music__meta">
+      <span class="music__label" data-i18n="music.nowPlaying"></span>
+      <span class="music__track" data-i18n="music.track"></span>
+      <div class="music__actions">
+        <button type="button" class="music__btn" id="music-play" hidden data-i18n="music.play"></button>
+        <button type="button" class="music__btn" id="music-mute" data-i18n="music.mute"></button>
+      </div>
+    </div>
+  </div>
+
+  <p class="hint" id="hint" aria-hidden="true" data-i18n="hint.skip"></p>
+</body>
+</html>
