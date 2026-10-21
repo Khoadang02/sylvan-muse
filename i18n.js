@@ -6,8 +6,8 @@
 window.TRANSLATIONS = {
   vi: {
     meta: {
-      title: "Sylvan Muse — Phòng tranh giữa rừng",
-      description: "Một phòng tranh nhỏ: một bức ảnh, một bài thơ, và một khu rừng.",
+      title: "Sylvan Muse — Phòng tranh nhỏ giữa rừng",
+      description: "Một phòng tranh nhỏ: một bức ảnh, một bài thơ và cả một khu rừng.",
     },
     gallery: {
       name: "Sylvan Muse",
@@ -19,23 +19,23 @@ window.TRANSLATIONS = {
       choiceEn: "English",
     },
     entrance: {
-      welcome: "Xin chào.",
-      line2: "Hãy bước thật chậm.",
-      cue: "Chạm để vào",
+      welcome: "Chào mừng bạn.",
+      line2: "Hãy bước vào thật chậm nhé.",
+      cue: "Chạm để bước vào",
     },
     story: {
       label: "Câu chuyện phía sau bức ảnh",
       lines: [
-        "Trên một con đường mòn yên tĩnh, sâu trong rừng,\nanh ấy không tìm kiếm điều gì cả.",
-        "Rồi giữa những tán cây,\nmột bông hoa đón lấy ánh sáng.",
-        "Anh ấy dừng lại. Nín thở.",
-        "Và bấm máy.",
-        "Đây là những gì tác giả đã thấy.",
+        "Trên con đường mòn vắng lặng,\nsâu trong rừng,\nanh ấy chẳng tìm kiếm điều gì.",
+        "Rồi giữa những hàng cây,\nmột đóa hoa khẽ đón lấy ánh nắng.",
+        "Anh ấy dừng chân. Nín thở.",
+        "Và khẽ bấm máy.",
+        "Đây là khoảnh khắc\ntác giả đã nhìn thấy.",
       ],
     },
     hall: {
       imageAlt:
-        "Một cô gái mặc áo khoác ô liu đi một mình trên con đường mòn phủ lá, giữa những thân cây cao ngập nắng vàng cuối thu.",
+        "Một cô gái mặc áo khoác màu ô liu một mình bước trên lối mòn phủ lá, giữa những hàng cây cao ngập nắng vàng cuối thu.",
       placardLabel: "Thông tin tác phẩm",
       titleLabel: "Tác phẩm",
       photographerLabel: "Chụp bởi",
@@ -53,29 +53,29 @@ window.TRANSLATIONS = {
     ],
     music: {
       track: "Holocene · Bon Iver",
-      listen: "Nghe trên Apple Music ↗",
+      listen: "Nghe trọn bài trên Apple Music ↗",
       mute: "Tắt nhạc",
       unmute: "Bật nhạc",
     },
     question: {
-      prompt: "Bạn có thích không?",
-      yes: "Có, mình rất thích",
-      no: "Mình chỉ ghé qua",
+      prompt: "Bạn có thích bức ảnh này không?",
+      yes: "Có, mình thích lắm",
+      no: "Mình chỉ ghé ngang thôi",
     },
     farewell: {
-      noteLabel: "Gửi lời nhắn đến tác giả",
-      notePlaceholder: "Không bắt buộc…",
-      send: "Gửi",
+      noteLabel: "Để lại đôi lời cho tác giả",
+      notePlaceholder: "Viết gì cũng được, hoặc để trống…",
+      send: "Gửi đi",
       sending: "Đang gửi…",
-      error: "Chưa gửi được. Bạn thử lại nhé.",
+      error: "Chưa gửi được rồi. Bạn thử lại giúp mình nhé.",
       thanksYes:
-        "Cảm ơn bạn đã ghé thăm phòng tranh. Tình cảm của bạn đã được gửi đến tác giả.",
+        "Cảm ơn bạn đã ghé thăm phòng tranh. Tình cảm của bạn đã được gửi tới tác giả rồi.",
       thanksNo:
-        "Cảm ơn bạn đã ghé qua. Khu rừng vẫn sẽ ở đây, mỗi khi bạn quay lại.",
-      again: "Ghé thăm lần nữa",
+        "Cảm ơn bạn đã ghé qua. Khu rừng vẫn luôn ở đây, chờ bạn quay lại.",
+      again: "Dạo lại một vòng",
     },
     hint: {
-      skip: "Chạm hoặc nhấn phím cách để tiếp tục",
+      skip: "Chạm hoặc nhấn phím cách để đi tiếp",
     },
   },
 
