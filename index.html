@@ -4,17 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Sylvan Muse</title>
-  <meta name="description" content="A small gallery: one photograph, one poem, and a forest.">
   <meta name="theme-color" content="#0d0b08">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Sylvan Muse — Where the Poem Blooms">
-  <meta property="og:description" content="Đại ngàn ôm bóng nhỏ, thơ nở giữa rừng cây… · A small gallery in the forest.">
-  <meta property="og:url" content="https://khoadang02.github.io/sylvan-muse/">
-  <meta property="og:image" content="https://khoadang02.github.io/sylvan-muse/assets/forest-trail.jpg">
-  <meta property="og:image:width" content="1098">
-  <meta property="og:image:height" content="1560">
-  <meta property="og:image:alt" content="A woman walks alone down a leaf-covered forest trail in golden autumn light.">
-  <meta name="twitter:card" content="summary_large_image">
+  <meta property="og:title" content="Sylvan Muse">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d0b08'/%3E%3Ccircle cx='32' cy='32' r='18' fill='%23dcae63' opacity='.25'/%3E%3Cpath d='M32 14c9 8 9 28 0 36c-9-8-9-28 0-36z' fill='%23dcae63'/%3E%3C/svg%3E">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -74,8 +66,8 @@
       <figure class="artwork" id="artwork">
         <div class="artwork__frame">
           <picture>
-            <source srcset="assets/forest-trail.webp" type="image/webp">
-            <img src="assets/forest-trail.jpg" width="1098" height="1560" decoding="async" data-i18n-attr="alt:hall.imageAlt" alt="">
+            <source type="image/webp">
+            <img data-webp="assets/forest-trail.webp" data-src="assets/forest-trail.jpg" width="1098" height="1560" decoding="async" data-i18n-attr="alt:hall.imageAlt" alt="">
           </picture>
           <div class="artwork__spotlight" aria-hidden="true"></div>
         </div>
@@ -128,16 +120,14 @@
     </section>
   </main>
 
-  <!-- Music card: the YouTube player stays visible, per YouTube's terms -->
+  <!-- Music: a small sound toggle, credited to Apple Music -->
   <div class="music" id="music" hidden>
-    <div class="music__player"><div id="yt-player"></div></div>
+    <button type="button" class="music__toggle" id="music-toggle" aria-pressed="true" data-i18n-attr="aria-label:music.mute">
+      <span class="music__bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    </button>
     <div class="music__meta">
-      <span class="music__label" data-i18n="music.nowPlaying"></span>
       <span class="music__track" data-i18n="music.track"></span>
-      <div class="music__actions">
-        <button type="button" class="music__btn" id="music-play" hidden data-i18n="music.play"></button>
-        <button type="button" class="music__btn" id="music-mute" data-i18n="music.mute"></button>
-      </div>
+      <a class="music__credit" id="music-credit" target="_blank" rel="noopener" data-i18n="music.listen"></a>
     </div>
   </div>
 

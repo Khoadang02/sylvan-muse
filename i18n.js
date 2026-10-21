@@ -52,11 +52,10 @@ window.TRANSLATIONS = {
       ["Đại ngàn ôm bóng nhỏ, thơ nở giữa rừng cây…"],
     ],
     music: {
-      nowPlaying: "Đang phát",
-      track: "Holocene — Bon Iver",
-      play: "Phát nhạc",
-      mute: "Tắt tiếng",
-      unmute: "Bật tiếng",
+      track: "Holocene · Bon Iver",
+      listen: "Nghe trên Apple Music ↗",
+      mute: "Tắt nhạc",
+      unmute: "Bật nhạc",
     },
     question: {
       prompt: "Bạn có thích không?",
@@ -128,11 +127,10 @@ window.TRANSLATIONS = {
       ["The great forest cradles a small figure;", "a poem blooms among the trees…"],
     ],
     music: {
-      nowPlaying: "Now playing",
-      track: "Holocene — Bon Iver",
-      play: "Play music",
-      mute: "Mute",
-      unmute: "Unmute",
+      track: "Holocene · Bon Iver",
+      listen: "Listen on Apple Music ↗",
+      mute: "Mute music",
+      unmute: "Play music",
     },
     question: {
       prompt: "Did you like it?",

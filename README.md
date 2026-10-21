@@ -12,7 +12,7 @@ No build step: `index.html`, `style.css`, `script.js`, `i18n.js`, `assets/`.
 | --- | --- |
 | All visible text, placard details, poem (VI original, EN draft) | `i18n.js` |
 | Email that receives visitors' notes | `script.js` → `CONFIG.noteEmail` |
-| YouTube video (official "Holocene") | `script.js` → `CONFIG.youtubeVideoId` |
+| Music: Apple Music 30-second preview of "Holocene", looped | `script.js` → `CONFIG.musicPreviewUrl`, `CONFIG.appleMusicUrl` |
 
 Run it locally (any static server works):
 
@@ -20,7 +20,7 @@ Run it locally (any static server works):
 npx http-server@14.1.1 -p 5173 -c-1
 ```
 
-Then open http://localhost:5173. Open the page over http, not `file://`, because the YouTube player needs a real origin.
+Then open http://localhost:5173. Open the page over http, not `file://`, because the music is fetched from Apple and needs a real origin.
 
 ## 1. Visitor notes by email (FormSubmit, free, no sign-up)
 

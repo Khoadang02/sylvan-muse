@@ -9,10 +9,13 @@
     // Notes are emailed here via FormSubmit (https://formsubmit.co). After activating,
     // you can swap the address for the random alias FormSubmit gives you.
     noteEmail: "tranhuuthuc02@gmail.com",
-    // "Holocene" by Bon Iver, official upload — from https://www.youtube.com/watch?v=TWcyIpul8OE
-    youtubeVideoId: "TWcyIpul8OE",
-    musicVolume: 60,
-    musicFadeMs: 8000,
+    // "Holocene" by Bon Iver — Apple Music's official 30-second preview (iTunes Search API),
+    // credited with a link back to the full song on Apple Music.
+    musicPreviewUrl:
+      "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/89/fb/8d/89fb8d90-25fe-a859-60e7-4464aa0fd98c/mzaf_754194167290958559.plus.aac.p.m4a",
+    appleMusicUrl: "https://music.apple.com/us/album/holocene/438685974?i=438685989",
+    musicVolume: 0.7,
+    musicFadeSec: 6,
     questionDelayMs: 30000,
     // Typing sound: "keyboard" (soft, muted mechanical clicks)
     // or "terminal" (soft on-screen text blips, as in 80s–90s films).
@@ -66,7 +69,6 @@
     if (state.lang) {
       document.documentElement.lang = state.lang;
       document.title = t("meta.title");
-      $('meta[name="description"]').setAttribute("content", t("meta.description"));
     }
     $$("[data-typed]").forEach((el) => buildTyped(el, el.textContent));
     buildWallText();
@@ -178,6 +180,8 @@
   function initKeySounds() {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
+    // iOS 17+: play like media, so the ring/silent switch doesn't mute the gallery.
+    if (navigator.audioSession) navigator.audioSession.type = "playback";
     if (!keys.ctx) {
       const ctx = (keys.ctx = new AC());
       const rate = ctx.sampleRate;
@@ -391,7 +395,7 @@
     },
 
     story() {
-      loadYouTubeAPI().catch(() => {});
+      loadMusic().catch(() => {});
       state.storyDone = false;
       $$("#wall-text li").forEach((li) => li.classList.remove("is-shown"));
       drawTrail(26000);
@@ -633,123 +637,110 @@
     $("#hint").classList.toggle("is-shown", on);
   }
 
-  /* ---------- Music (YouTube IFrame API, lazy) ---------- */
-  const music = { api: null, player: null, ready: false, want: false, muted: false, fadeRaf: 0, checkTimer: 0 };
+  /* ---------- Music: Apple Music's official 30-second preview, looped ----------
+     Decoded into the same Web Audio context the key sounds use. That context is
+     unlocked by the language tap, so the music can start later without another
+     tap — on iPhone too — and the loop can crossfade into itself. */
+  const music = { buffer: null, loading: null, gain: null, sources: [], loopTimer: 0, want: false, muted: false };
+  const LOOP_FADE = 3; // seconds of crossfade where the clip meets itself
 
-  function loadYouTubeAPI() {
-    if (music.api) return music.api;
-    music.api = new Promise((resolve, reject) => {
-      if (window.YT && window.YT.Player) return resolve(window.YT);
-      const prev = window.onYouTubeIframeAPIReady;
-      window.onYouTubeIframeAPIReady = () => {
-        if (typeof prev === "function") prev();
-        resolve(window.YT);
-      };
-      const s = document.createElement("script");
-      s.src = "https://www.youtube.com/iframe_api";
-      s.async = true;
-      s.onerror = () => {
-        music.api = null;
-        reject(new Error("YouTube API failed to load"));
-      };
-      document.head.appendChild(s);
-    });
-    return music.api;
-  }
-
-  function createPlayer(YT) {
-    // Build the iframe ourselves so it carries allow="autoplay" from the start;
-    // with the visitor's earlier click, browsers then let it play with sound.
-    const params = new URLSearchParams({ enablejsapi: "1", autoplay: "0", playsinline: "1", rel: "0" });
-    if (location.origin.startsWith("http")) params.set("origin", location.origin);
-    const iframe = document.createElement("iframe");
-    iframe.id = "yt-player";
-    iframe.src = `https://www.youtube-nocookie.com/embed/${CONFIG.youtubeVideoId}?${params}`;
-    iframe.allow = "autoplay; encrypted-media; picture-in-picture";
-    iframe.title = "Holocene — Bon Iver (YouTube)";
-    $("#yt-player").replaceWith(iframe);
-
-    music.player = new YT.Player(iframe, {
-      events: {
-        onReady: () => {
-          music.ready = true;
-          if (music.want) beginPlayback();
-        },
-        onStateChange: (e) => {
-          if (e.data === YT.PlayerState.PLAYING) $("#music-play").hidden = true;
-        },
-      },
-    });
+  function loadMusic() {
+    if (music.loading || !keys.ctx) return music.loading || Promise.reject(new Error("No audio"));
+    music.loading = fetch(CONFIG.musicPreviewUrl)
+      .then((res) => {
+        if (!res.ok) throw new Error(`Music ${res.status}`);
+        return res.arrayBuffer();
+      })
+      .then((data) => new Promise((resolve, reject) => keys.ctx.decodeAudioData(data, resolve, reject)))
+      .then((buffer) => (music.buffer = buffer))
+      .catch((err) => {
+        music.loading = null;
+        throw err;
+      });
+    return music.loading;
   }
 
   function startMusic() {
+    if (!keys.ctx) return;
     $("#music").hidden = false;
     music.want = true;
-    loadYouTubeAPI()
-      .then((YT) => {
-        if (!music.want) return;
-        if (!music.player) createPlayer(YT);
-        else if (music.ready) beginPlayback();
+    loadMusic()
+      .then(() => {
+        if (!music.want || music.sources.length) return;
+        const ctx = keys.ctx;
+        if (!music.gain) {
+          music.gain = ctx.createGain();
+          music.gain.connect(ctx.destination);
+        }
+        const now = ctx.currentTime;
+        music.gain.gain.cancelScheduledValues(now);
+        music.gain.gain.setValueAtTime(0, now);
+        if (!music.muted) music.gain.gain.linearRampToValueAtTime(CONFIG.musicVolume, now + CONFIG.musicFadeSec);
+        playSegment(now + 0.05);
+        setMusicPlaying(true);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.warn("[Sylvan Muse] music unavailable:", err);
+        $("#music").hidden = true;
+      });
   }
 
-  function beginPlayback() {
-    const p = music.player;
-    p.setVolume(0);
-    if (music.muted) p.mute();
-    else p.unMute();
-    p.playVideo();
-    fadeVolume(0, CONFIG.musicVolume, CONFIG.musicFadeMs);
-    clearTimeout(music.checkTimer);
-    music.checkTimer = setTimeout(() => {
-      // Autoplay was blocked (common on iOS): offer a gentle play button.
-      if (music.want && p.getPlayerState() !== window.YT.PlayerState.PLAYING) $("#music-play").hidden = false;
-    }, 3500);
-  }
-
-  function fadeVolume(from, to, ms, done) {
-    cancelAnimationFrame(music.fadeRaf);
-    const start = performance.now();
-    const step = (now) => {
-      const k = Math.min(1, (now - start) / ms);
-      if (music.ready) music.player.setVolume(Math.round(from + (to - from) * k));
-      if (k < 1) music.fadeRaf = requestAnimationFrame(step);
-      else if (done) done();
-    };
-    music.fadeRaf = requestAnimationFrame(step);
+  function playSegment(at) {
+    const ctx = keys.ctx;
+    const buf = music.buffer;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const g = ctx.createGain();
+    const end = at + buf.duration;
+    g.gain.setValueAtTime(0, at);
+    g.gain.linearRampToValueAtTime(1, at + LOOP_FADE);
+    g.gain.setValueAtTime(1, end - LOOP_FADE);
+    g.gain.linearRampToValueAtTime(0, end);
+    src.connect(g).connect(music.gain);
+    src.start(at);
+    src.onended = () => (music.sources = music.sources.filter((s) => s !== src));
+    music.sources.push(src);
+    // queue the next pass a few seconds early so it is never late, even in a background tab
+    const next = end - LOOP_FADE;
+    music.loopTimer = setTimeout(() => music.want && playSegment(next), Math.max(0, (next - ctx.currentTime - 4) * 1000));
   }
 
   function stopMusic() {
     music.want = false;
-    clearTimeout(music.checkTimer);
-    $("#music-play").hidden = true;
+    clearTimeout(music.loopTimer);
     const hide = () => ($("#music").hidden = true);
-    if (!music.ready) return hide();
-    fadeVolume(music.player.getVolume(), 0, 1500, () => {
-      music.player.pauseVideo();
-      music.player.seekTo(0, true);
+    if (!keys.ctx || !music.gain) return hide();
+    const now = keys.ctx.currentTime;
+    music.gain.gain.cancelScheduledValues(now);
+    music.gain.gain.setValueAtTime(music.gain.gain.value, now);
+    music.gain.gain.linearRampToValueAtTime(0, now + 1.5);
+    const playing = music.sources;
+    music.sources = [];
+    setTimeout(() => {
+      playing.forEach((s) => s.stop());
       hide();
-    });
+      setMusicPlaying(false);
+    }, 1600);
   }
 
   function toggleMute() {
     music.muted = !music.muted;
-    const btn = $("#music-mute");
-    btn.dataset.i18n = music.muted ? "music.unmute" : "music.mute";
-    btn.textContent = t(btn.dataset.i18n);
-    btn.setAttribute("aria-pressed", String(music.muted));
-    if (!music.ready) return;
-    if (music.muted) music.player.mute();
-    else music.player.unMute();
+    if (keys.ctx && keys.ctx.state === "suspended") keys.ctx.resume();
+    if (music.gain) {
+      const now = keys.ctx.currentTime;
+      music.gain.gain.cancelScheduledValues(now);
+      music.gain.gain.setValueAtTime(music.gain.gain.value, now);
+      music.gain.gain.linearRampToValueAtTime(music.muted ? 0 : CONFIG.musicVolume, now + 0.8);
+    }
+    setMusicPlaying(!music.muted);
   }
 
-  function playFromButton() {
-    if (!music.ready) return;
-    music.player.setVolume(0);
-    if (!music.muted) music.player.unMute();
-    music.player.playVideo();
-    fadeVolume(0, CONFIG.musicVolume, 3000);
+  function setMusicPlaying(on) {
+    const btn = $("#music-toggle");
+    btn.classList.toggle("is-playing", on && !music.muted);
+    btn.setAttribute("aria-pressed", String(!music.muted));
+    btn.dataset.i18nAttr = `aria-label:${music.muted ? "music.unmute" : "music.mute"}`;
+    btn.setAttribute("aria-label", t(music.muted ? "music.unmute" : "music.mute"));
   }
 
   /* ---------- Ambient: dust in the sunbeams, a few falling leaves ---------- */
@@ -899,8 +890,12 @@
     );
     $("#note-form").addEventListener("submit", sendNote);
     $("#again").addEventListener("click", () => goTo("threshold"));
-    $("#music-mute").addEventListener("click", toggleMute);
-    $("#music-play").addEventListener("click", playFromButton);
+    $("#music-toggle").addEventListener("click", toggleMute);
+    $("#music-credit").href = CONFIG.appleMusicUrl;
+    // The artwork src is set here rather than in the HTML, so link previews don't pick it up.
+    const art = $("#artwork img");
+    $("#artwork source").srcset = art.dataset.webp;
+    art.src = art.dataset.src;
 
     document.addEventListener("keydown", (e) => {
       if (e.key !== " " && e.key !== "Enter") return;
