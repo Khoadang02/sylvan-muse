@@ -12,8 +12,8 @@
     // "Holocene" by Bon Iver — Apple Music's official 30-second preview (iTunes Search API),
     // credited with a link back to the full song on Apple Music.
     musicPreviewUrl:
-      "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/89/fb/8d/89fb8d90-25fe-a859-60e7-4464aa0fd98c/mzaf_754194167290958559.plus.aac.p.m4a",
-    appleMusicUrl: "https://music.apple.com/us/album/holocene/438685974?i=438685989",
+      "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/8b/74/ba/8b74ba14-6488-29f2-bc71-29887b6cc1e5/mzaf_11920459242243046922.plus.aac.p.m4a",
+    appleMusicUrl: "https://music.apple.com/us/album/holocene/482817464?i=482817470",
     musicVolume: 0.7,
     musicFadeSec: 6,
     questionDelayMs: 30000,
