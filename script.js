@@ -14,6 +14,9 @@
     musicVolume: 60,
     musicFadeMs: 8000,
     questionDelayMs: 30000,
+    // Typing sound: "keyboard" (soft, muted mechanical clicks)
+    // or "terminal" (soft on-screen text blips, as in 80s–90s films).
+    typingSound: "keyboard",
   };
 
   const T = window.TRANSLATIONS;
@@ -35,7 +38,8 @@
     scene: "threshold",
     entered: true,
     timers: [],
-    storyIndex: 0,
+    storyDone: false,
+    typing: null,
     stanzaIndex: -1,
     stanzaTimer: null,
     answer: null,
@@ -64,6 +68,7 @@
       document.title = t("meta.title");
       $('meta[name="description"]').setAttribute("content", t("meta.description"));
     }
+    $$("[data-typed]").forEach((el) => buildTyped(el, el.textContent));
     buildWallText();
     buildPoem();
   }
@@ -71,11 +76,7 @@
   function buildWallText() {
     const list = $("#wall-text");
     list.replaceChildren(
-      ...t("story.lines").map((line) => {
-        const li = document.createElement("li");
-        li.textContent = line;
-        return li;
-      })
+      ...t("story.lines").map((line) => buildTyped(document.createElement("li"), line))
     );
   }
 
@@ -85,14 +86,248 @@
       ...t("poem").map((lines) => {
         const p = document.createElement("p");
         p.className = "stanza";
-        lines.forEach((line) => {
-          const span = document.createElement("span");
-          span.textContent = line;
-          p.appendChild(span);
-        });
-        return p;
+        return buildTyped(p, lines.join("\n"));
       })
     );
+  }
+
+  /* ---------- Typed text ---------- */
+  const graphemes = (text) =>
+    "Segmenter" in Intl
+      ? Array.from(new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(text), (s) => s.segment)
+      : Array.from(text);
+
+  // Lay out every letter up front (invisible) so nothing reflows while typing.
+  function buildTyped(el, text) {
+    el.replaceChildren();
+    text.normalize("NFC").split("\n").forEach((line, li) => {
+      if (li > 0) el.appendChild(document.createElement("br"));
+      line.split(/( +)/).forEach((part) => {
+        if (!part) return;
+        if (part.trim() === "") {
+          const space = document.createElement("span");
+          space.className = "ch";
+          space.textContent = part;
+          el.appendChild(space);
+          return;
+        }
+        const word = document.createElement("span");
+        word.className = "word";
+        graphemes(part).forEach((g) => {
+          const ch = document.createElement("span");
+          ch.className = "ch";
+          ch.textContent = g;
+          word.appendChild(ch);
+        });
+        el.appendChild(word);
+      });
+    });
+    return el;
+  }
+
+  // A slow, uneven, human tempo — like someone thinking between keys.
+  function keyDelay(ch, speed, pause) {
+    const base = speed * (0.55 + Math.random() * 1.05);
+    if (/[.!?]/.test(ch)) return base + 650 * pause;
+    if (ch === "…") return base + 950 * pause;
+    if (/[,;:]/.test(ch)) return base + 380 * pause;
+    if (ch.trim() === "") return base * 1.15;
+    return base;
+  }
+
+  // Strike each letter like a key. Returns a job whose finish() reveals the rest at once.
+  // At the natural end of a line, Enter is pressed.
+  function type(el, { speed = 140, pause = 1, volume = 0.6, onDone } = {}) {
+    const chars = $$(".ch", el);
+    let i = 0;
+    const job = { timer: 0, finish };
+    state.typing = job;
+
+    function end(callDone) {
+      clearTimeout(job.timer);
+      chars.forEach((c) => c.classList.add("on"));
+      chars.forEach((c) => c.classList.remove("is-caret"));
+      if (state.typing === job) state.typing = null;
+      if (callDone && onDone) onDone();
+    }
+    function finish(callDone = true) {
+      end(callDone);
+    }
+    function step() {
+      if (i > 0) chars[i - 1].classList.remove("is-caret");
+      if (i >= chars.length) {
+        enterSound(volume);
+        return end(true);
+      }
+      const c = chars[i++];
+      c.classList.add("on", "is-caret");
+      keySound(c.textContent, volume);
+      job.timer = later(step, keyDelay(c.textContent, speed, pause));
+    }
+
+    if (reducedMotion.matches) end(true);
+    else step();
+    return job;
+  }
+
+  /* Typing sounds, synthesized with Web Audio — no audio files.
+     Everything runs through a warm low-pass, a gentle compressor and a little room
+     reverb, so the clicks sit softly in the space instead of poking at the ear. */
+  const keys = { ctx: null, noise: null, out: null, bed: null, bedGain: null };
+
+  function initKeySounds() {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!keys.ctx) {
+      const ctx = (keys.ctx = new AC());
+      const rate = ctx.sampleRate;
+
+      keys.noise = ctx.createBuffer(1, Math.floor(rate * 0.5), rate);
+      const d = keys.noise.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+
+      keys.out = ctx.createGain();
+      keys.out.gain.value = 0.22; // kept low: in the background, never over the words
+      const warm = ctx.createBiquadFilter();
+      warm.type = "lowpass";
+      warm.frequency.value = 3400;
+      warm.Q.value = 0.5;
+      const soften = ctx.createDynamicsCompressor();
+      soften.threshold.value = -30;
+      soften.knee.value = 20;
+      soften.ratio.value = 4;
+      soften.attack.value = 0.002;
+      soften.release.value = 0.12;
+      keys.out.connect(warm).connect(soften).connect(ctx.destination);
+
+      // small wooden room: a short, dark, decaying reverb tail
+      const room = ctx.createConvolver();
+      const ir = ctx.createBuffer(2, Math.floor(rate * 0.9), rate);
+      for (let c = 0; c < 2; c++) {
+        const ch = ir.getChannelData(c);
+        let lp = 0;
+        for (let i = 0; i < ch.length; i++) {
+          lp += 0.25 * ((Math.random() * 2 - 1) - lp);
+          ch[i] = lp * Math.pow(1 - i / ch.length, 3);
+        }
+      }
+      room.buffer = ir;
+      const wet = ctx.createGain();
+      wet.gain.value = 0.2;
+      soften.connect(room).connect(wet).connect(ctx.destination);
+
+      // quiet room tone under the typing (soft brown noise), faded in per scene
+      const bedBuf = ctx.createBuffer(1, Math.floor(rate * 4), rate);
+      const b = bedBuf.getChannelData(0);
+      let last = 0;
+      for (let i = 0; i < b.length; i++) {
+        last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02;
+        b[i] = last * 3.5;
+      }
+      keys.bed = ctx.createBufferSource();
+      keys.bed.buffer = bedBuf;
+      keys.bed.loop = true;
+      const bedTone = ctx.createBiquadFilter();
+      bedTone.type = "lowpass";
+      bedTone.frequency.value = 700;
+      keys.bedGain = ctx.createGain();
+      keys.bedGain.gain.value = 0;
+      keys.bed.connect(bedTone).connect(keys.bedGain).connect(ctx.destination);
+      keys.bed.start();
+    }
+    if (keys.ctx.state === "suspended") keys.ctx.resume();
+  }
+
+  function roomTone(on) {
+    if (!keys.ctx) return;
+    const g = keys.bedGain.gain;
+    const t = keys.ctx.currentTime;
+    g.cancelScheduledValues(t);
+    g.setValueAtTime(g.value, t);
+    g.linearRampToValueAtTime(on && !music.muted ? 0.02 : 0, t + (on ? 3 : 4));
+  }
+
+  function noiseBurst(t, dur, { type = "bandpass", freq = 3000, q = 1, gain = 0.2, attack = 0.004, rate = 1 }) {
+    const ctx = keys.ctx;
+    const src = ctx.createBufferSource();
+    src.buffer = keys.noise;
+    src.playbackRate.value = rate;
+    const f = ctx.createBiquadFilter();
+    f.type = type;
+    f.frequency.value = freq;
+    f.Q.value = q;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(gain, t + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f).connect(g).connect(keys.out);
+    src.start(t, Math.random() * 0.4, dur + 0.02);
+    return f;
+  }
+
+  function tone(t, freq, dur, gain, type = "sine", endFreq) {
+    const ctx = keys.ctx;
+    const o = ctx.createOscillator();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t);
+    if (endFreq) o.frequency.exponentialRampToValueAtTime(endFreq, t + dur);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(gain, t + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(keys.out);
+    o.start(t);
+    o.stop(t + dur + 0.02);
+  }
+
+  const soundOn = (volume) => keys.ctx && !music.muted && volume > 0;
+
+  function keySound(ch, volume) {
+    if (!soundOn(volume)) return;
+    const t = keys.ctx.currentTime;
+    const v = volume * (0.8 + Math.random() * 0.4);
+    if (CONFIG.typingSound === "terminal") terminalKey(ch, t, v);
+    else keyboardKey(ch, t, v);
+  }
+
+  function enterSound(volume) {
+    if (!soundOn(volume)) return;
+    const t = keys.ctx.currentTime + 0.25;
+    if (CONFIG.typingSound === "terminal") terminalEnter(t, volume);
+    else keyboardEnter(t, volume);
+  }
+
+  // Soft, muted mechanical keyboard: a rounded click and a low "thock",
+  // then a quieter tick as the key comes back up. No bright pings.
+  function keyboardKey(ch, t, v) {
+    const space = ch.trim() === "";
+    const pitch = space ? 0.7 : 0.9 + Math.random() * 0.25;
+    noiseBurst(t, 0.02, { freq: 2300 * pitch, q: 1.3, gain: (space ? 0.2 : 0.32) * v, attack: 0.004 });
+    tone(t + 0.004, (space ? 130 : 190) * pitch, 0.05, 0.1 * v, "sine", 110);
+    noiseBurst(t + 0.006, 0.025, { type: "lowpass", freq: 800, gain: 0.07 * v, attack: 0.006 });
+    const up = t + 0.09 + Math.random() * 0.04;
+    noiseBurst(up, 0.014, { freq: 1900 * pitch, q: 1.4, gain: 0.1 * v, attack: 0.004 });
+  }
+
+  // end of a line: a slightly fuller press, like the wide Enter key
+  function keyboardEnter(t, v) {
+    noiseBurst(t, 0.028, { freq: 1900, q: 1.1, gain: 0.32 * v, attack: 0.005 });
+    tone(t + 0.005, 150, 0.07, 0.13 * v, "sine", 90);
+    noiseBurst(t + 0.006, 0.04, { type: "lowpass", freq: 600, gain: 0.14 * v, attack: 0.006 });
+    noiseBurst(t + 0.14, 0.02, { freq: 1200, q: 1.2, gain: 0.08 * v, attack: 0.005 });
+  }
+
+  // Alternative: the movie computer — soft on-screen blips.
+  function terminalKey(ch, t, v) {
+    if (ch.trim() === "") return tone(t, 520, 0.02, 0.025 * v, "sine");
+    const f = 1050 + Math.random() * 180;
+    tone(t, f, 0.028, 0.09 * v, "triangle");
+    tone(t, f / 2, 0.022, 0.035 * v, "sine");
+  }
+
+  function terminalEnter(t, v) {
+    tone(t, 880, 0.06, 0.06 * v, "triangle");
+    tone(t + 0.07, 1320, 0.09, 0.05 * v, "triangle");
   }
 
   /* ---------- Scene flow ---------- */
@@ -111,6 +346,7 @@
 
   function goTo(name, delay = fadeMs()) {
     clearTimers();
+    state.typing = null;
     const prev = scenes[state.scene];
     prev.classList.remove("is-active");
     prev.inert = true;
@@ -129,6 +365,7 @@
   const enter = {
     threshold() {
       stopMusic();
+      roomTone(false);
       stopAmbient();
       resetHall();
       resetFarewell();
@@ -136,22 +373,35 @@
     },
 
     entrance() {
+      roomTone(true);
       $("#welcome").focus({ preventScroll: true });
-      later(() => setHint(true), 3500);
-      later(() => goTo("story"), 8000);
+      const [first, second] = $$(".entrance__line");
+      later(() => type(first, {
+        speed: 110,
+        pause: 0.6,
+        onDone: () => later(() => type(second, {
+          speed: 100,
+          pause: 0.6,
+          onDone: () => {
+            later(() => setHint(true), 600);
+            later(() => goTo("story"), 3500);
+          },
+        }), 700),
+      }), 700);
     },
 
     story() {
       loadYouTubeAPI().catch(() => {});
-      state.storyIndex = 0;
+      state.storyDone = false;
       $$("#wall-text li").forEach((li) => li.classList.remove("is-shown"));
-      drawTrail(25000);
+      drawTrail(26000);
       setHint(true);
-      later(() => showStoryLine(0), 900);
+      later(() => typeStoryLine(0), 900);
     },
 
     hall() {
       resetHall();
+      roomTone(false);
       startMusic();
       later(() => scenes.hall.classList.add("is-lit"), 600);
       later(startAmbient, 3000);
@@ -174,18 +424,24 @@
   };
 
   /* Scene 3 — wall text, one line at a time */
-  const STORY_PAUSES = [4600, 4400, 3400, 3000];
+  const STORY_PAUSES = [1300, 1300, 1100, 1300];
 
-  function showStoryLine(i) {
+  function typeStoryLine(i) {
     const lines = $$("#wall-text li");
     if (!lines[i]) return;
     lines[i].classList.add("is-shown");
-    state.storyIndex = i + 1;
-    if (i < lines.length - 1) {
-      later(() => showStoryLine(i + 1), STORY_PAUSES[i] ?? 3200);
-    } else {
-      later(() => goTo("hall"), 4800);
-    }
+    type(lines[i], {
+      speed: 80,
+      pause: 0.55,
+      onDone: () => {
+        if (i < lines.length - 1) {
+          later(() => typeStoryLine(i + 1), STORY_PAUSES[i] ?? 1600);
+        } else {
+          state.storyDone = true;
+          later(() => goTo("hall"), 3400);
+        }
+      },
+    });
   }
 
   function drawTrail(duration) {
@@ -208,10 +464,14 @@
     stanzas[i].classList.add("is-shown");
     state.stanzaIndex = i;
     keepInView(stanzas[i]);
-    if (i < stanzas.length - 1) {
-      const lineCount = stanzas[i].children.length;
-      state.stanzaTimer = later(() => showStanza(i + 1), 5000 + lineCount * 2400);
-    }
+    // Quieter keys here: Holocene is playing.
+    type(stanzas[i], {
+      speed: 170,
+      volume: 0.3,
+      onDone: () => {
+        if (i < stanzas.length - 1) state.stanzaTimer = later(() => showStanza(i + 1), 4000);
+      },
+    });
   }
 
   function keepInView(el) {
@@ -237,6 +497,7 @@
     scenes.hall.classList.remove("is-lit");
     $(".placard").classList.remove("is-shown");
     $$("#poem .stanza").forEach((s) => s.classList.remove("is-shown", "is-past"));
+    $$("#poem .ch").forEach((c) => c.classList.remove("on", "is-caret"));
     const q = $("#question");
     q.hidden = true;
     q.classList.remove("is-shown");
@@ -246,10 +507,9 @@
   /* Scene 6 — farewell */
   function showThanks(text) {
     const el = $("#farewell-thanks");
-    el.textContent = text;
-    requestAnimationFrame(() => el.classList.add("is-shown"));
+    buildTyped(el, text);
     el.focus({ preventScroll: true });
-    later(() => ($("#again").hidden = false), 2500);
+    type(el, { speed: 120, volume: 0.35, onDone: () => later(() => ($("#again").hidden = false), 1200) });
   }
 
   function resetFarewell() {
@@ -263,7 +523,6 @@
     send.textContent = t("farewell.send");
     const thanks = $("#farewell-thanks");
     thanks.textContent = "";
-    thanks.classList.remove("is-shown");
     $("#heart").classList.remove("is-shown");
     $("#again").hidden = true;
     $("#petals").replaceChildren();
@@ -343,10 +602,12 @@
         goTo("story");
         break;
       case "story":
-        if (state.storyIndex < $$("#wall-text li").length) {
+        if (!state.storyDone) {
           clearTimers();
+          if (state.typing) state.typing.finish(false);
           $$("#wall-text li").forEach((li) => li.classList.add("is-shown"));
-          state.storyIndex = Infinity;
+          $$("#wall-text .ch").forEach((c) => c.classList.add("on"));
+          state.storyDone = true;
           drawTrail(1500);
           later(() => goTo("hall"), 3500);
         } else {
@@ -357,10 +618,14 @@
         scenes.hall.classList.add("is-lit");
         $(".placard").classList.add("is-shown");
         startAmbient();
-        if (state.stanzaIndex < $$("#poem .stanza").length - 1) showStanza(state.stanzaIndex + 1);
+        if (state.typing) state.typing.finish();
+        else if (state.stanzaIndex < $$("#poem .stanza").length - 1) showStanza(state.stanzaIndex + 1);
         else showQuestion();
         break;
       }
+      case "farewell":
+        if (state.typing) state.typing.finish();
+        break;
     }
   }
 
@@ -611,6 +876,7 @@
   function chooseLanguage(lang) {
     if (state.scene !== "threshold" || !state.entered) return;
     state.lang = lang;
+    initKeySounds();
     applyTranslations();
     const bloom = $("#bloom");
     bloom.classList.remove("is-opening");

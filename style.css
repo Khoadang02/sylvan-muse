@@ -15,7 +15,7 @@
   --text-faint: rgba(243, 231, 201, 0.5);
   --line: rgba(220, 174, 99, 0.35);
 
-  --font-serif: "Cormorant Garamond", "Lora", Georgia, serif;
+  --font-script: "Dancing Script", "Segoe Script", cursive;
   --font-sans: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   --fade: 1.6s;
@@ -136,7 +136,7 @@ button { font: inherit; color: inherit; }
 .threshold__name {
   position: relative;
   margin: 0;
-  font-family: var(--font-serif);
+  font-family: var(--font-script);
   font-weight: 400;
   font-size: clamp(2.6rem, 8vw, 5rem);
   letter-spacing: 0.08em;
@@ -169,8 +169,8 @@ button { font: inherit; color: inherit; }
   border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(220, 174, 99, 0.04);
-  font-family: var(--font-serif);
-  font-size: 1.3rem;
+  font-family: var(--font-script);
+  font-size: 1.5rem;
   letter-spacing: 0.04em;
   cursor: pointer;
   transition: background 0.6s var(--ease), border-color 0.6s var(--ease), box-shadow 0.6s var(--ease);
@@ -191,25 +191,43 @@ button { font: inherit; color: inherit; }
 
 .entrance__welcome {
   margin: 0;
-  font-family: var(--font-serif);
+  font-family: var(--font-script);
   font-weight: 400;
   font-size: clamp(2rem, 6vw, 3.4rem);
   line-height: 1.35;
 }
 .entrance__welcome:focus { outline: none; }
 
-.entrance__line {
-  display: block;
+.entrance__line { display: block; }
+.entrance__line--2 { color: var(--c-honey); }
+
+/* ---------- Typed text: each letter is struck like a key ---------- */
+.word { white-space: nowrap; }
+.ch {
+  position: relative;
   opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 2s var(--ease), transform 2s var(--ease);
 }
-.entrance__line--2 {
-  font-style: italic;
-  color: var(--c-honey);
-  transition-delay: 1.4s;
+.word .ch { display: inline-block; }
+.ch.on {
+  opacity: 1;
+  animation: key-in 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.3);
 }
-.is-active .entrance__line { opacity: 1; transform: none; }
+@keyframes key-in {
+  from { opacity: 0; transform: translateY(-0.22em) scale(1.3) rotate(-4deg); filter: blur(1.5px); }
+  60%  { opacity: 1; }
+}
+.ch.is-caret::after {
+  content: "";
+  position: absolute;
+  right: -0.14em;
+  top: 0.2em;
+  bottom: 0.12em;
+  width: 1.5px;
+  background: var(--c-honey);
+  box-shadow: 0 0 6px rgba(220, 174, 99, 0.8);
+  animation: caret-blink 0.9s steps(1) infinite;
+}
+@keyframes caret-blink { 50% { opacity: 0; } }
 
 .cue {
   display: inline-flex;
@@ -264,23 +282,18 @@ button { font: inherit; color: inherit; }
   margin: 0;
   padding: 0;
   max-width: 40rem;
-  font-family: var(--font-serif);
-  font-size: clamp(1.35rem, 3.6vw, 1.95rem);
+  font-family: var(--font-script);
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
   line-height: 1.5;
 }
 
 .wall-text li {
   margin: 0 0 1.1em;
-  white-space: pre-line;
   opacity: 0;
-  transform: translateY(6px);
-  filter: blur(2px);
-  transition: opacity 1.8s var(--ease), transform 1.8s var(--ease), filter 1.8s var(--ease);
 }
-.wall-text li.is-shown { opacity: 1; transform: none; filter: none; }
+.wall-text li.is-shown { opacity: 1; }
 .wall-text li:last-child {
   margin-top: 1.8em;
-  font-style: italic;
   color: var(--c-honey);
 }
 
@@ -364,9 +377,8 @@ button { font: inherit; color: inherit; }
 
 .placard__title {
   margin: 0 0 0.6rem;
-  font-family: var(--font-serif);
+  font-family: var(--font-script);
   font-weight: 500;
-  font-style: italic;
   font-size: 1.5rem;
   line-height: 1.25;
 }
@@ -386,19 +398,17 @@ button { font: inherit; color: inherit; }
 .poem {
   display: grid;
   gap: 1.6rem;
-  font-family: var(--font-serif);
-  font-size: clamp(1.15rem, 1.6vw, 1.32rem);
+  font-family: var(--font-script);
+  font-size: clamp(1.3rem, 1.9vw, 1.55rem);
   line-height: 1.65;
 }
 
 .stanza {
   margin: 0;
   opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 3s var(--ease), transform 3s var(--ease);
+  transition: opacity 1.2s var(--ease);
 }
-.stanza span { display: block; }
-.stanza.is-shown { opacity: 1; transform: none; }
+.stanza.is-shown { opacity: 1; }
 
 /* ---------- Scene 5: The question ---------- */
 .question {
@@ -410,8 +420,7 @@ button { font: inherit; color: inherit; }
 
 .question__prompt {
   margin: 0 0 1rem;
-  font-family: var(--font-serif);
-  font-style: italic;
+  font-family: var(--font-script);
   font-size: 1.35rem;
   color: var(--c-honey);
 }
@@ -479,7 +488,7 @@ button { font: inherit; color: inherit; }
 
 .music__meta { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
 .music__label { font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-faint); }
-.music__track { font-family: var(--font-serif); font-style: italic; font-size: 0.98rem; white-space: nowrap; }
+.music__track { font-family: var(--font-script); font-size: 0.98rem; white-space: nowrap; }
 .music__actions { display: flex; gap: 0.4rem; margin-top: 0.2rem; }
 .music__btn {
   padding: 0.2rem 0.6rem;
@@ -528,7 +537,7 @@ button { font: inherit; color: inherit; }
 }
 
 .note-form { display: grid; gap: 0.9rem; width: 100%; justify-items: center; }
-.note-form__label { font-family: var(--font-serif); font-size: 1.35rem; font-style: italic; }
+.note-form__label { font-family: var(--font-script); font-size: 1.35rem; }
 .note-form textarea {
   width: 100%;
   padding: 0.9rem 1rem;
@@ -536,7 +545,7 @@ button { font: inherit; color: inherit; }
   border-radius: 12px;
   background: rgba(13, 11, 8, 0.55);
   color: var(--text);
-  font: 400 1.05rem/1.55 var(--font-serif);
+  font: 400 1.05rem/1.55 var(--font-script);
   resize: vertical;
 }
 .note-form textarea::placeholder { color: var(--text-faint); }
@@ -545,13 +554,10 @@ button { font: inherit; color: inherit; }
 
 .farewell__thanks {
   margin: 0;
-  font-family: var(--font-serif);
+  font-family: var(--font-script);
   font-size: clamp(1.4rem, 3.6vw, 1.9rem);
   line-height: 1.5;
-  opacity: 0;
-  transition: opacity 2.4s var(--ease);
 }
-.farewell__thanks.is-shown { opacity: 1; }
 .farewell__thanks:focus { outline: none; }
 
 .again {
@@ -665,7 +671,7 @@ button { font: inherit; color: inherit; }
   .placard__meta dt { display: none; }
 
   /* one stanza at a time, cross-fading in place */
-  .poem { display: grid; gap: 0; font-size: 1.12rem; line-height: 1.55; }
+  .poem { display: grid; gap: 0; font-size: 1.3rem; line-height: 1.55; }
   .stanza { grid-area: 1 / 1; }
   .stanza.is-past { opacity: 0; }
 
@@ -693,7 +699,8 @@ button { font: inherit; color: inherit; }
   .threshold__glow, .cue svg { animation: none; }
   .bloom.is-opening { animation: bloom-still 1.4s ease forwards; }
   .scene--hall.is-lit .artwork img { animation: none; }
-  .wall-text li, .stanza, .entrance__line, .question { transform: none !important; filter: none !important; }
+  .question { transform: none !important; }
+  .ch.on { animation: none; }
   .heart.is-shown { animation: draw-heart 0.01s forwards; }
   .petals { display: none; }
 }
