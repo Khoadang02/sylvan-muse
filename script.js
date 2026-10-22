@@ -334,6 +334,26 @@
     tone(t + 0.07, 1320, 0.09, 0.05 * v, "triangle");
   }
 
+  // A camera shutter: first curtain, a breath, second curtain, and the mirror settling.
+  function shutterSound() {
+    if (!soundOn(1)) return;
+    const t = keys.ctx.currentTime;
+    noiseBurst(t, 0.03, { freq: 2600, q: 0.8, gain: 0.55, attack: 0.002 });
+    tone(t, 230, 0.05, 0.28, "sine", 120);
+    noiseBurst(t + 0.075, 0.04, { freq: 1900, q: 0.9, gain: 0.48, attack: 0.002 });
+    tone(t + 0.075, 190, 0.06, 0.26, "sine", 100);
+    noiseBurst(t + 0.08, 0.14, { type: "lowpass", freq: 900, gain: 0.12, attack: 0.004 });
+  }
+
+  function takeTheShot() {
+    shutterSound();
+    if (reducedMotion.matches) return;
+    const flash = $("#flash");
+    flash.classList.remove("is-firing");
+    flash.getBoundingClientRect();
+    flash.classList.add("is-firing");
+  }
+
   /* ---------- Scene flow ---------- */
   const fadeMs = () => (reducedMotion.matches ? 800 : 1600);
 
@@ -430,6 +450,8 @@
   /* Scene 3 — wall text, one line at a time */
   const STORY_PAUSES = [1300, 1300, 1100, 1300];
 
+  const SHUTTER_LINE = 3; // "Và khẽ bấm máy." / "And he took the shot."
+
   function typeStoryLine(i) {
     const lines = $$("#wall-text li");
     if (!lines[i]) return;
@@ -438,6 +460,7 @@
       speed: 80,
       pause: 0.55,
       onDone: () => {
+        if (i === SHUTTER_LINE) later(takeTheShot, 450);
         if (i < lines.length - 1) {
           later(() => typeStoryLine(i + 1), STORY_PAUSES[i] ?? 1600);
         } else {
@@ -474,6 +497,7 @@
       volume: 0.3,
       onDone: () => {
         if (i < stanzas.length - 1) state.stanzaTimer = later(() => showStanza(i + 1), 4000);
+        else later(() => scenes.hall.classList.add("is-signed"), 1800);
       },
     });
   }
@@ -498,7 +522,7 @@
   function resetHall() {
     clearTimeout(state.stanzaTimer);
     state.stanzaIndex = -1;
-    scenes.hall.classList.remove("is-lit");
+    scenes.hall.classList.remove("is-lit", "is-signed");
     $(".placard").classList.remove("is-shown");
     $$("#poem .stanza").forEach((s) => s.classList.remove("is-shown", "is-past"));
     $$("#poem .ch").forEach((c) => c.classList.remove("on", "is-caret"));

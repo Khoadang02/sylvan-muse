@@ -343,6 +343,87 @@ button { font: inherit; color: inherit; }
   transition: --spot 7s var(--ease), opacity 4s var(--ease) 6s;
 }
 
+/* the photograph starts out of focus and racks in, as if through the lens */
+.artwork picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: blur(16px);
+}
+.scene--hall.is-lit .artwork picture {
+  animation: focus-pull 4.2s cubic-bezier(0.3, 0.1, 0.2, 1) 0.6s forwards;
+}
+@keyframes focus-pull {
+  0%   { filter: blur(16px); }
+  55%  { filter: blur(1.2px); }
+  72%  { filter: blur(3px); }
+  100% { filter: blur(0); }
+}
+
+/* the artist signs the print once the poem is written */
+.signature {
+  position: absolute;
+  right: 7%;
+  bottom: 4.5%;
+  z-index: 2;
+  pointer-events: none;
+  color: var(--c-haze);
+  font-family: var(--font-script);
+  font-weight: 600;
+  font-size: clamp(1.5rem, 2.3vw, 2.1rem);
+  line-height: 1;
+  transform: rotate(-6deg);
+  filter: drop-shadow(0 1px 4px rgba(13, 11, 8, 0.75));
+  opacity: 0;
+  transition: opacity 0.6s var(--ease);
+}
+.signature__name {
+  display: inline-block;
+  padding: 0 0.15em;
+  clip-path: inset(-30% 100% -30% 0);
+}
+.signature__swash {
+  display: block;
+  width: 100%;
+  height: 0.42em;
+  margin-top: -0.12em;
+  overflow: visible;
+}
+.signature__swash path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  vector-effect: non-scaling-stroke;
+}
+.scene--hall.is-signed .signature { opacity: 0.92; }
+.scene--hall.is-signed .signature__name {
+  clip-path: inset(-30% 0 -30% 0);
+  transition: clip-path 2.8s cubic-bezier(0.45, 0.05, 0.4, 1) 0.2s;
+}
+.scene--hall.is-signed .signature__swash path {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1.1s cubic-bezier(0.5, 0, 0.3, 1) 2.9s;
+}
+
+/* the shutter's flash */
+.flash {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 45%, rgba(255, 248, 230, 0.9), rgba(243, 231, 201, 0.5) 60%);
+  opacity: 0;
+}
+.flash.is-firing { animation: flash 0.7s ease-out; }
+@keyframes flash {
+  0%   { opacity: 0; }
+  12%  { opacity: 0.32; }
+  100% { opacity: 0; }
+}
+
 .scene--hall.is-lit .artwork img {
   filter: brightness(1) saturate(1);
   animation: ken-burns 70s linear 1.5s forwards;
@@ -654,6 +735,7 @@ button { font: inherit; color: inherit; }
     aspect-ratio: auto;
   }
   .artwork__frame { border-radius: 0; box-shadow: none; }
+  .signature { right: 22px; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 92px); font-size: 1.6rem; }
 
   .scene--hall::after {
     content: "";
@@ -722,6 +804,8 @@ button { font: inherit; color: inherit; }
   .threshold__glow, .cue svg { animation: none; }
   .bloom.is-opening { animation: bloom-still 1.4s ease forwards; }
   .scene--hall.is-lit .artwork img { animation: none; }
+  .artwork picture, .scene--hall.is-lit .artwork picture { filter: none; animation: none; }
+  .scene--hall.is-signed .signature__name, .scene--hall.is-signed .signature__swash path { transition: none; }
   .question { transform: none !important; }
   .ch.on { animation: none; }
   .heart.is-shown { animation: draw-heart 0.01s forwards; }
