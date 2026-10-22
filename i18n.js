@@ -46,6 +46,8 @@ window.TRANSLATIONS = {
       place: "Conkle's Hollow, Hocking Hills, Ohio",
       year: "18 tháng 10, 2026",
       poemLabel: "Bài thơ",
+      details: "Thông tin",
+      hidePlacard: "Chạm để thổi bay tấm thẻ",
     },
     // Nguyên văn — mỗi khổ thơ là một mảng, mỗi dòng là một chuỗi.
     poem: [
@@ -73,6 +75,17 @@ window.TRANSLATIONS = {
       thanksNo:
         "Cảm ơn bạn đã ghé qua. Khu rừng vẫn luôn ở đây, chờ bạn quay lại.",
       again: "Dạo lại một vòng",
+      ticket: "Lưu vé tham quan",
+      share: "Chia sẻ khu rừng này",
+      copied: "Đã sao chép liên kết.",
+      saved: "Vé đã sẵn sàng.",
+    },
+    ticket: {
+      brand: "SYLVAN MUSE · PHÒNG TRANH NHỎ GIỮA RỪNG",
+      admit: "Vé dành riêng cho bạn",
+      visited: "Ghé thăm",
+      number: "Số 001",
+      file: "ve-sylvan-muse.png",
     },
     hint: {
       skip: "Chạm hoặc nhấn phím cách để đi tiếp",
@@ -121,6 +134,8 @@ window.TRANSLATIONS = {
       place: "Conkle's Hollow, Hocking Hills, Ohio",
       year: "October 18, 2026",
       poemLabel: "Poem",
+      details: "Details",
+      hidePlacard: "Tap to blow the label away",
     },
     // DRAFT — English translation for review.
     poem: [
@@ -148,6 +163,17 @@ window.TRANSLATIONS = {
       thanksNo:
         "Thank you for walking through. The forest will be here whenever you return.",
       again: "Visit again",
+      ticket: "Save your ticket",
+      share: "Share this forest",
+      copied: "Link copied.",
+      saved: "Your ticket is ready.",
+    },
+    ticket: {
+      brand: "SYLVAN MUSE · A SMALL GALLERY IN THE FOREST",
+      admit: "Admit one — just you",
+      visited: "Visited",
+      number: "No. 001",
+      file: "sylvan-muse-ticket.png",
     },
     hint: {
       skip: "Tap or press Space to continue",

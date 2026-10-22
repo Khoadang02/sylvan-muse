@@ -183,11 +183,52 @@ button { font: inherit; color: inherit; }
 
 /* ---------- Scene 2: Entrance ---------- */
 .scene--entrance {
-  background: radial-gradient(ellipse at 50% 60%, rgba(102, 104, 58, 0.18), transparent 60%);
+  /* soft light deep in the woods, so the trunks stand dark against it */
+  background:
+    radial-gradient(ellipse 38% 34% at 50% 40%, rgba(236, 200, 132, 0.32), rgba(220, 174, 99, 0.12) 55%, transparent 80%),
+    radial-gradient(ellipse 80% 50% at 50% 30%, rgba(102, 104, 58, 0.28), transparent 75%),
+    linear-gradient(#1b1910, #0d0b08 80%);
+  overflow: hidden;
   align-content: center;
   gap: 3rem;
   text-align: center;
 }
+
+/* the welcome: autumn leaves drifting on the wind, in a warm forest light */
+.woods { position: absolute; inset: 0; pointer-events: none; }
+.woods__leaves { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.woods__rays {
+  position: absolute;
+  inset: -20% -10% 0;
+  background: repeating-linear-gradient(105deg,
+    transparent 0 60px, rgba(243, 222, 170, 0.07) 90px, transparent 150px,
+    transparent 210px, rgba(243, 222, 170, 0.04) 240px, transparent 300px);
+  -webkit-mask-image: radial-gradient(ellipse 55% 70% at 50% 10%, #000, transparent 75%);
+  mask-image: radial-gradient(ellipse 55% 70% at 50% 10%, #000, transparent 75%);
+  mix-blend-mode: screen;
+  animation: rays 9s ease-in-out infinite alternate;
+}
+@keyframes rays {
+  from { opacity: 0.55; transform: translateX(-2%); }
+  to   { opacity: 1;    transform: translateX(2%); }
+}
+
+.woods__mist {
+  position: absolute;
+  inset: auto -20% 0;
+  height: 42%;
+  background:
+    radial-gradient(ellipse 40% 60% at 30% 80%, rgba(243, 231, 201, 0.07), transparent 70%),
+    radial-gradient(ellipse 45% 55% at 75% 85%, rgba(243, 231, 201, 0.06), transparent 70%);
+  animation: mist 22s ease-in-out infinite alternate;
+}
+@keyframes mist {
+  from { transform: translateX(-4%); }
+  to   { transform: translateX(4%); }
+}
+
+.entrance__welcome, .scene--entrance .cue { position: relative; }
 
 .entrance__welcome {
   margin: 0;
@@ -256,8 +297,33 @@ button { font: inherit; color: inherit; }
 
 /* ---------- Scene 3: Wall text ---------- */
 .scene--story {
-  background: radial-gradient(ellipse at 70% 30%, rgba(220, 174, 99, 0.07), transparent 60%);
+  background: var(--c-ink);
+  overflow: hidden;
+  --story-light: 0;
 }
+
+/* the light he saw: the photograph's colours, out of focus, growing with each line */
+.glow { position: absolute; inset: 0; pointer-events: none; }
+.glow__light {
+  position: absolute;
+  inset: -12%;
+  width: 124%;
+  height: 124%;
+  object-fit: cover;
+  object-position: 48% 60%;
+  filter: blur(18px) saturate(1.25);
+  opacity: var(--story-light);
+  transform: scale(1.05);
+  transition: opacity 3.5s var(--ease), transform 40s linear;
+}
+.is-active .glow__light { transform: scale(1.18); }
+.glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 45% 50%, rgba(13, 11, 8, 0.62), rgba(13, 11, 8, 0.25) 75%, rgba(13, 11, 8, 0.5));
+}
+.wall-text { text-shadow: 0 1px 14px rgba(13, 11, 8, 0.85); }
 
 .trail {
   position: absolute;
@@ -491,6 +557,18 @@ button { font: inherit; color: inherit; }
 }
 .stanza.is-shown { opacity: 1; }
 
+.placard__leaf, .placard-return { display: none; }
+
+/* leaves bursting from the placard as it blows away */
+.burst-leaf {
+  position: fixed;
+  z-index: 40;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+.burst-leaf svg { display: block; width: 100%; height: 100%; }
+
 /* ---------- Scene 5: The question ---------- */
 .question {
   opacity: 0;
@@ -666,8 +744,37 @@ button { font: inherit; color: inherit; }
 }
 .farewell__thanks:focus { outline: none; }
 
+/* keepsakes: a ticket to keep, and a way to share */
+.keepsake {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem 1.4rem;
+  animation: fade-in 2s var(--ease) both 0.6s;
+}
+.keepsake__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.05rem;
+  border: 1px solid rgba(220, 174, 99, 0.45);
+  border-radius: 999px;
+  background: rgba(13, 11, 8, 0.45);
+  color: var(--text);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.4s, color 0.4s, background 0.4s;
+}
+.keepsake__link:hover, .keepsake__link:focus-visible {
+  border-color: var(--c-honey);
+  color: var(--c-honey);
+  background: rgba(220, 174, 99, 0.08);
+}
+.keepsake__link[disabled] { opacity: 0.6; cursor: progress; }
+.keepsake__status { min-height: 1.2em; margin: -0.8rem 0 0; font-size: 0.8rem; color: var(--text-soft); }
+
 .again {
-  margin-top: 1rem;
+  margin-top: 0.4rem;
   padding: 0.5rem 0.9rem;
   border: 0;
   border-bottom: 1px solid var(--line);
@@ -773,6 +880,47 @@ button { font: inherit; color: inherit; }
     backdrop-filter: blur(8px);
     z-index: 3;
   }
+  .placard { cursor: pointer; padding-right: 1.6rem; }
+  .placard.is-gone { visibility: hidden; }
+  .placard__leaf {
+    display: block;
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 12px;
+    height: 12px;
+    color: var(--c-honey);
+  }
+  .placard__leaf svg { display: block; width: 100%; height: 100%; transform-origin: 50% 90%; animation: leaf-sway 3.2s ease-in-out infinite; }
+  @keyframes leaf-sway {
+    0%, 100% { transform: rotate(-12deg); }
+    50%      { transform: rotate(14deg); }
+  }
+
+  /* a small, quiet way to bring the placard back */
+  .placard-return {
+    display: inline-flex;
+    position: fixed;
+    left: max(14px, env(safe-area-inset-left));
+    bottom: max(16px, env(safe-area-inset-bottom));
+    z-index: 3;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.42rem 0.8rem 0.42rem 0.6rem;
+    border: 1px solid rgba(220, 174, 99, 0.45);
+    border-radius: 999px;
+    background: rgba(13, 11, 8, 0.5);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: var(--text);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    animation: fade-in 1.2s var(--ease) both;
+  }
+  .placard-return[hidden] { display: none; }
+  .placard-return svg { width: 13px; height: 13px; color: var(--c-honey); }
   .placard__title { font-size: 1rem; margin-bottom: 0.2rem; }
   .placard__meta { font-size: 0.68rem; line-height: 1.5; }
   .placard__meta dt { display: none; }
@@ -801,7 +949,9 @@ button { font: inherit; color: inherit; }
    ========================================================== */
 @media (prefers-reduced-motion: reduce) {
   :root { --fade: 0.8s; }
-  .threshold__glow, .cue svg { animation: none; }
+  .threshold__glow, .cue svg, .woods__rays, .woods__mist { animation: none; }
+  .is-active .glow__light { transform: none; }
+  .placard__leaf svg { animation: none; }
   .bloom.is-opening { animation: bloom-still 1.4s ease forwards; }
   .scene--hall.is-lit .artwork img { animation: none; }
   .artwork picture, .scene--hall.is-lit .artwork picture { filter: none; animation: none; }

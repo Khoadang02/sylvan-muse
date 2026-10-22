@@ -44,6 +44,11 @@
 
     <!-- Scene 2 — Entrance hall -->
     <section class="scene scene--entrance" id="scene-entrance" data-scene="entrance" aria-labelledby="welcome">
+      <div class="woods" aria-hidden="true">
+        <div class="woods__rays"></div>
+        <canvas class="woods__leaves" id="welcome-leaves"></canvas>
+        <div class="woods__mist"></div>
+      </div>
       <h2 class="entrance__welcome" id="welcome" tabindex="-1">
         <span class="entrance__line" data-i18n="entrance.welcome" data-typed></span>
         <span class="entrance__line entrance__line--2" data-i18n="entrance.line2" data-typed></span>
@@ -56,6 +61,7 @@
 
     <!-- Scene 3 — The inspiration -->
     <section class="scene scene--story" id="scene-story" data-scene="story" data-i18n-attr="aria-label:story.label">
+      <div class="glow" aria-hidden="true"><canvas class="glow__light" id="story-glow" width="36" height="52"></canvas></div>
       <svg class="trail" viewBox="0 0 1200 800" preserveAspectRatio="none" aria-hidden="true">
         <path id="trail-path" d="M-20 690 C 140 640, 210 720, 330 650 S 520 520, 610 560 S 780 640, 860 520 S 990 330, 1060 300 S 1180 220, 1230 140" />
       </svg>
@@ -82,6 +88,7 @@
 
       <div class="hall__panel">
         <aside class="placard" data-i18n-attr="aria-label:hall.placardLabel">
+          <span class="placard__leaf"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5C17.5 7 17.8 14.5 12 20.5 6.2 14.5 6.5 7 12 2.5Z" fill="currentColor" opacity=".9"/><path d="M12 5v17" stroke="#0d0b08" stroke-opacity=".35" stroke-width="1" fill="none"/></svg></span>
           <h2 class="placard__title" id="artwork-title" data-i18n="hall.artworkTitle"></h2>
           <dl class="placard__meta">
             <div><dt data-i18n="hall.photographerLabel"></dt><dd data-i18n="hall.photographer"></dd></div>
@@ -89,6 +96,11 @@
             <div><dt data-i18n="hall.yearLabel"></dt><dd data-i18n="hall.year"></dd></div>
           </dl>
         </aside>
+
+        <button type="button" class="placard-return" id="placard-return" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5C17.5 7 17.8 14.5 12 20.5 6.2 14.5 6.5 7 12 2.5Z" fill="currentColor" opacity=".9"/><path d="M12 5v17" stroke="#0d0b08" stroke-opacity=".35" stroke-width="1" fill="none"/></svg>
+          <span data-i18n="hall.details"></span>
+        </button>
 
         <div class="poem" id="poem" data-i18n-attr="aria-label:hall.poemLabel" aria-live="polite"></div>
 
@@ -121,6 +133,18 @@
         </form>
 
         <p class="farewell__thanks" id="farewell-thanks" tabindex="-1" aria-live="polite"></p>
+
+        <div class="keepsake" id="keepsake" hidden>
+          <button type="button" class="keepsake__link" id="ticket-btn">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 7h16v3a2 2 0 0 0 0 4v3H4v-3a2 2 0 0 0 0-4z M14 7v10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="0" stroke-linejoin="round"/></svg>
+            <span data-i18n="farewell.ticket"></span>
+          </button>
+          <button type="button" class="keepsake__link" id="share-btn">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4M5 13v6h14v-6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span data-i18n="farewell.share"></span>
+          </button>
+        </div>
+        <p class="keepsake__status" id="keepsake-status" role="status"></p>
 
         <button type="button" class="again" id="again" data-i18n="farewell.again" hidden></button>
       </div>

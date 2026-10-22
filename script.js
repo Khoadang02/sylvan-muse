@@ -73,6 +73,7 @@
     $$("[data-typed]").forEach((el) => buildTyped(el, el.textContent));
     buildWallText();
     buildPoem();
+    setupPlacard();
   }
 
   function buildWallText() {
@@ -347,11 +348,408 @@
 
   function takeTheShot() {
     shutterSound();
+    setStoryLight(0.75);
     if (reducedMotion.matches) return;
     const flash = $("#flash");
     flash.classList.remove("is-firing");
     flash.getBoundingClientRect();
     flash.classList.add("is-firing");
+  }
+
+  /* ---------- Welcome: autumn leaves on the wind ---------- */
+  const LEAF_COLORS = ["#c9772f", "#a8521f", "#dcae63", "#8a5530", "#b8892e", "#7a4a22", "#d99a4e"];
+  const fall = { canvas: $("#welcome-leaves"), ctx: null, leaves: [], raf: 0, last: 0, w: 0, h: 0, until: 0 };
+
+  function leafPath(ctx, s) {
+    ctx.beginPath();
+    ctx.moveTo(0, -s);
+    ctx.bezierCurveTo(s * 0.78, -s * 0.45, s * 0.58, s * 0.5, 0, s * 0.82);
+    ctx.bezierCurveTo(-s * 0.58, s * 0.5, -s * 0.78, -s * 0.45, 0, -s);
+    ctx.closePath();
+  }
+
+  function placeLeaf(l, anywhere) {
+    if (anywhere) {
+      l.x = Math.random() * fall.w;
+      l.y = Math.random() * fall.h;
+    } else if (Math.random() < 0.6) {
+      l.x = Math.random() * fall.w * 0.9 - fall.w * 0.1;
+      l.y = -30;
+    } else {
+      l.x = -30;
+      l.y = Math.random() * fall.h * 0.7;
+    }
+    l.size = (6 + Math.random() * 7) * (0.55 + l.z);
+    l.color = LEAF_COLORS[Math.floor(Math.random() * LEAF_COLORS.length)];
+    l.phase = Math.random() * Math.PI * 2;
+    l.flutter = 1.2 + Math.random() * 1.8;
+    l.rot = Math.random() * Math.PI * 2;
+    l.spin = (Math.random() - 0.5) * 1.6;
+    l.drift = (Math.random() - 0.5) * 14;
+    return l;
+  }
+
+  function sizeFall() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    fall.w = fall.canvas.clientWidth || window.innerWidth;
+    fall.h = fall.canvas.clientHeight || window.innerHeight;
+    fall.canvas.width = fall.w * dpr;
+    fall.canvas.height = fall.h * dpr;
+    fall.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function startFall() {
+    fall.ctx = fall.ctx || fall.canvas.getContext("2d");
+    sizeFall();
+    if (!fall.leaves.length) {
+      const count = isNarrow.matches ? 26 : 46;
+      fall.leaves = Array.from({ length: count }, () => placeLeaf({ z: 0.3 + Math.random() * 0.95 }, true))
+        .sort((a, b) => a.z - b.z); // far leaves first, near ones on top
+    }
+    fall.until = 0;
+    if (reducedMotion.matches) return drawFall(0);
+    if (!fall.raf) {
+      fall.last = performance.now();
+      fall.raf = requestAnimationFrame(fallTick);
+    }
+  }
+
+  function fallTick(now) {
+    if (state.scene !== "entrance") {
+      if (!fall.until) fall.until = now + 2200; // keep drifting while the scene fades out
+      if (now > fall.until) {
+        fall.raf = 0;
+        fall.ctx.clearRect(0, 0, fall.w, fall.h);
+        return;
+      }
+    }
+    const dt = Math.min(0.05, (now - fall.last) / 1000);
+    fall.last = now;
+    const s = now / 1000;
+    const wind = 18 + 26 * Math.sin(s * 0.35) + 12 * Math.sin(s * 1.3 + 1);
+    for (const l of fall.leaves) {
+      l.phase += dt * l.flutter;
+      l.x += (wind * l.z + l.drift + Math.cos(l.phase) * 8) * dt;
+      l.y += (14 + 24 * l.z + Math.sin(l.phase) * 10) * dt;
+      l.rot += (l.spin + Math.sin(l.phase) * 0.6) * dt;
+      if (l.y > fall.h + 30 || l.x > fall.w + 30) placeLeaf(l, false);
+    }
+    drawFall(s);
+    fall.raf = requestAnimationFrame(fallTick);
+  }
+
+  function drawFall() {
+    const { ctx, w, h } = fall;
+    ctx.clearRect(0, 0, w, h);
+    for (const l of fall.leaves) {
+      ctx.save();
+      ctx.translate(l.x, l.y);
+      ctx.rotate(l.rot);
+      ctx.scale(Math.cos(l.phase * 0.8) * 0.85 + 0.15 * Math.sign(Math.cos(l.phase * 0.8) || 1), 1); // the leaf turns over as it falls
+      ctx.globalAlpha = 0.3 + 0.6 * Math.min(1, l.z);
+      ctx.fillStyle = l.color;
+      leafPath(ctx, l.size);
+      ctx.fill();
+      ctx.globalAlpha *= 0.5;
+      ctx.strokeStyle = "rgba(255, 238, 205, 0.6)";
+      ctx.lineWidth = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(0, -l.size * 0.8);
+      ctx.lineTo(0, l.size * 1.05);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  /* ---------- The placard blows away (phones), leaving a way back ---------- */
+  const LEAF_SVG = "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 2.5C17.5 7 17.8 14.5 12 20.5 6.2 14.5 6.5 7 12 2.5Z\" fill=\"currentColor\" opacity=\".9\"/><path d=\"M12 5v17\" stroke=\"#0d0b08\" stroke-opacity=\".35\" stroke-width=\"1\" fill=\"none\"/></svg>";
+
+  function setupPlacard() {
+    const card = $(".placard");
+    if (isNarrow.matches) {
+      card.tabIndex = 0;
+      card.setAttribute("role", "button");
+      card.setAttribute("aria-label", t("hall.hidePlacard"));
+    } else {
+      card.removeAttribute("tabindex");
+      card.removeAttribute("role");
+      card.setAttribute("aria-label", t("hall.placardLabel"));
+    }
+  }
+
+  function whooshSound() {
+    if (!soundOn(1)) return;
+    const t0 = keys.ctx.currentTime;
+    const f = noiseBurst(t0, 1.1, { type: "lowpass", freq: 400, q: 0.7, gain: 0.16, attack: 0.3 });
+    f.frequency.setValueAtTime(400, t0);
+    f.frequency.exponentialRampToValueAtTime(1800, t0 + 0.45);
+    f.frequency.exponentialRampToValueAtTime(500, t0 + 1.1);
+  }
+
+  function burstLeaves(rect) {
+    if (reducedMotion.matches) return;
+    for (let i = 0; i < 18; i++) {
+      const leaf = document.createElement("span");
+      leaf.className = "burst-leaf";
+      leaf.innerHTML = LEAF_SVG;
+      leaf.style.color = LEAF_COLORS[i % LEAF_COLORS.length];
+      const size = 9 + Math.random() * 9;
+      leaf.style.width = leaf.style.height = `${size}px`;
+      leaf.style.left = `${rect.left + Math.random() * rect.width}px`;
+      leaf.style.top = `${rect.top + Math.random() * rect.height}px`;
+      document.body.appendChild(leaf);
+      const dx = 60 + Math.random() * 260;
+      const dy = -(40 + Math.random() * 260);
+      const spin = (Math.random() < 0.5 ? -1 : 1) * (180 + Math.random() * 540);
+      leaf.animate(
+        [
+          { transform: "translate(0, 0) rotate(0deg) scale(0.4)", opacity: 0 },
+          { transform: `translate(${dx * 0.25}px, ${dy * 0.35}px) rotate(${spin * 0.3}deg) scale(1)`, opacity: 1, offset: 0.18 },
+          { transform: `translate(${dx}px, ${dy}px) rotate(${spin}deg) scale(0.85)`, opacity: 0 },
+        ],
+        { duration: 1500 + Math.random() * 1200, easing: "cubic-bezier(0.2, 0.7, 0.3, 1)", delay: Math.random() * 180 }
+      ).finished.then(() => leaf.remove());
+    }
+  }
+
+  function blowPlacard() {
+    const card = $(".placard");
+    if (!isNarrow.matches || card.classList.contains("is-gone") || card.dataset.moving) return;
+    card.dataset.moving = "1";
+    whooshSound();
+    burstLeaves(card.getBoundingClientRect());
+    const gone = () => {
+      card.classList.add("is-gone");
+      delete card.dataset.moving;
+      $("#placard-return").hidden = false;
+    };
+    if (reducedMotion.matches) return gone();
+    card.getAnimations().forEach((a) => a.cancel());
+    card.animate(
+      [
+        { transform: "none", opacity: 1, filter: "blur(0)" },
+        { transform: "translate(8vw, -4vh) rotate(6deg)", opacity: 1, filter: "blur(0)", offset: 0.25 },
+        { transform: "translate(60vw, -38vh) rotate(32deg) scale(0.5)", opacity: 0, filter: "blur(3px)" },
+      ],
+      { duration: 1150, easing: "cubic-bezier(0.55, 0, 0.75, 0.2)", fill: "forwards" }
+    ).finished.then(gone);
+  }
+
+  function returnPlacard() {
+    const card = $(".placard");
+    $("#placard-return").hidden = true;
+    card.getAnimations().forEach((a) => a.cancel());
+    card.classList.remove("is-gone");
+    if (reducedMotion.matches) return;
+    card.animate(
+      [
+        { transform: "translate(-20vw, 6vh) rotate(-14deg) scale(0.7)", opacity: 0, filter: "blur(3px)" },
+        { transform: "none", opacity: 1, filter: "blur(0)" },
+      ],
+      { duration: 1000, easing: "cubic-bezier(0.2, 0.8, 0.3, 1)" }
+    );
+  }
+
+  function resetPlacard() {
+    const card = $(".placard");
+    card.getAnimations().forEach((a) => a.cancel());
+    card.classList.remove("is-gone");
+    delete card.dataset.moving;
+    $("#placard-return").hidden = true;
+  }
+
+  /* ---------- Story: the light he saw ---------- */
+  function paintGlow() {
+    const art = $("#artwork img");
+    const canvas = $("#story-glow");
+    const draw = () => canvas.getContext("2d").drawImage(art, 0, 0, canvas.width, canvas.height);
+    if (art.complete && art.naturalWidth) draw();
+    else art.addEventListener("load", draw, { once: true });
+  }
+
+  function setStoryLight(level) {
+    scenes.story.style.setProperty("--story-light", String(level));
+  }
+
+  /* ---------- Farewell keepsakes ---------- */
+  const visitedAt = { date: null };
+
+  function wrapLines(ctx, text, maxWidth) {
+    const words = text.split(" ");
+    const lines = [];
+    let line = "";
+    for (const w of words) {
+      const test = line ? `${line} ${w}` : w;
+      if (ctx.measureText(test).width > maxWidth && line) {
+        lines.push(line);
+        line = w;
+      } else line = test;
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  async function makeTicket() {
+    const W = 1080, H = 1680;
+    await Promise.all([
+      document.fonts.load('600 80px "Dancing Script"', "Nơi thơ nở"),
+      document.fonts.load('400 30px "Be Vietnam Pro"', "Vé"),
+      document.fonts.load('500 30px "Be Vietnam Pro"', "Vé"),
+    ]).catch(() => {});
+    const c = document.createElement("canvas");
+    c.width = W;
+    c.height = H;
+    const ctx = c.getContext("2d");
+
+    // night behind the ticket
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, "#1a160f");
+    bg.addColorStop(1, "#0d0b08");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // the paper ticket
+    const x0 = 70, y0 = 70, cw = W - 140, ch = H - 140, stubY = y0 + ch - 290;
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.6)";
+    ctx.shadowBlur = 50;
+    ctx.shadowOffsetY = 18;
+    ctx.fillStyle = "#f3e9d4";
+    ctx.beginPath();
+    ctx.roundRect(x0, y0, cw, ch, 26);
+    ctx.fill();
+    ctx.restore();
+    const paper = ctx.createLinearGradient(x0, y0, x0 + cw, y0 + ch);
+    paper.addColorStop(0, "#f6efdf");
+    paper.addColorStop(1, "#e8dcc2");
+    ctx.fillStyle = paper;
+    ctx.beginPath();
+    ctx.roundRect(x0, y0, cw, ch, 26);
+    ctx.fill();
+
+    // the photograph, cropped around the walker
+    const art = $("#artwork img");
+    const px = x0 + 50, py = y0 + 50, pw = cw - 100, ph = 820;
+    const iw = art.naturalWidth, ih = art.naturalHeight;
+    const scale = Math.max(pw / iw, ph / ih);
+    const sw = pw / scale, sh = ph / scale;
+    const sx = Math.min(iw - sw, Math.max(0, iw * 0.48 - sw / 2));
+    const sy = Math.min(ih - sh, Math.max(0, ih * 0.62 - sh / 2));
+    ctx.drawImage(art, sx, sy, sw, sh, px, py, pw, ph);
+    ctx.strokeStyle = "rgba(90, 70, 40, 0.35)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(px, py, pw, ph);
+
+    // words
+    const ink = "#1f1a12", soft = "#7a6a4f";
+    const cx = W / 2;
+    ctx.textAlign = "center";
+    ctx.fillStyle = soft;
+    ctx.font = '500 22px "Be Vietnam Pro", sans-serif';
+    ctx.letterSpacing = "4px";
+    ctx.fillText(t("ticket.brand"), cx, py + ph + 70);
+    ctx.letterSpacing = "0px";
+
+    ctx.fillStyle = ink;
+    ctx.font = '600 84px "Dancing Script", cursive';
+    ctx.fillText(t("hall.artworkTitle"), cx, py + ph + 165);
+
+    ctx.fillStyle = "#5a4a33";
+    ctx.font = '400 40px "Dancing Script", cursive';
+    const poemLine = t("poem")[0].join(" ");
+    wrapLines(ctx, poemLine, cw - 160).slice(0, 2).forEach((l, i) => ctx.fillText(l, cx, py + ph + 235 + i * 50));
+
+    ctx.fillStyle = soft;
+    ctx.font = '400 26px "Be Vietnam Pro", sans-serif';
+    ctx.fillText(`${t("hall.photographer")} · ${t("hall.place")}`, cx, stubY - 40);
+
+    // perforation and notches
+    ctx.save();
+    ctx.globalCompositeOperation = "destination-out";
+    [x0, x0 + cw].forEach((nx) => {
+      ctx.beginPath();
+      ctx.arc(nx, stubY, 26, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.restore();
+    ctx.fillStyle = "#0f0d09";
+    [x0, x0 + cw].forEach((nx) => {
+      ctx.beginPath();
+      ctx.arc(nx, stubY, 26, nx === x0 ? -Math.PI / 2 : Math.PI / 2, nx === x0 ? Math.PI / 2 : (3 * Math.PI) / 2);
+      ctx.fill();
+    });
+    ctx.strokeStyle = "rgba(90, 70, 40, 0.45)";
+    ctx.setLineDash([10, 12]);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x0 + 46, stubY);
+    ctx.lineTo(x0 + cw - 46, stubY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // the stub
+    const when = visitedAt.date || new Date();
+    const fmt = new Intl.DateTimeFormat(state.lang === "vi" ? "vi-VN" : "en-US", {
+      day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+    });
+    ctx.textAlign = "left";
+    ctx.fillStyle = ink;
+    ctx.font = '600 50px "Dancing Script", cursive';
+    ctx.fillText(t("ticket.admit"), x0 + 70, stubY + 105);
+    ctx.fillStyle = soft;
+    ctx.font = '400 26px "Be Vietnam Pro", sans-serif';
+    ctx.fillText(`${t("ticket.visited")}: ${fmt.format(when)}`, x0 + 70, stubY + 170);
+    ctx.textAlign = "right";
+    ctx.font = '500 24px "Be Vietnam Pro", sans-serif';
+    ctx.letterSpacing = "3px";
+    ctx.fillText(t("ticket.number"), x0 + cw - 70, stubY + 105);
+    ctx.letterSpacing = "0px";
+
+    return new Promise((resolve) => c.toBlob(resolve, "image/png"));
+  }
+
+  function keepsakeStatus(text) {
+    $("#keepsake-status").textContent = text;
+  }
+
+  async function saveTicket() {
+    const btn = $("#ticket-btn");
+    btn.disabled = true;
+    try {
+      const blob = await makeTicket();
+      const file = new File([blob], t("ticket.file"), { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: t("hall.artworkTitle") });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = file.name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+      }
+      keepsakeStatus(t("farewell.saved"));
+    } catch (err) {
+      if (err && err.name !== "AbortError") console.error(err);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function shareForest() {
+    const url = location.href.split("#")[0].split("?")[0];
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Sylvan Muse", url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        keepsakeStatus(t("farewell.copied"));
+      }
+    } catch (err) {
+      if (err && err.name !== "AbortError") console.error(err);
+    }
   }
 
   /* ---------- Scene flow ---------- */
@@ -397,6 +795,8 @@
     },
 
     entrance() {
+      visitedAt.date = new Date();
+      startFall();
       roomTone(true);
       $("#welcome").focus({ preventScroll: true });
       const [first, second] = $$(".entrance__line");
@@ -418,6 +818,8 @@
       loadMusic().catch(() => {});
       state.storyDone = false;
       $$("#wall-text li").forEach((li) => li.classList.remove("is-shown"));
+      paintGlow();
+      setStoryLight(0.12);
       drawTrail(26000);
       setHint(true);
       later(() => typeStoryLine(0), 900);
@@ -456,6 +858,7 @@
     const lines = $$("#wall-text li");
     if (!lines[i]) return;
     lines[i].classList.add("is-shown");
+    setStoryLight(0.18 + i * 0.1);
     type(lines[i], {
       speed: 80,
       pause: 0.55,
@@ -524,6 +927,7 @@
     state.stanzaIndex = -1;
     scenes.hall.classList.remove("is-lit", "is-signed");
     $(".placard").classList.remove("is-shown");
+    resetPlacard();
     $$("#poem .stanza").forEach((s) => s.classList.remove("is-shown", "is-past"));
     $$("#poem .ch").forEach((c) => c.classList.remove("on", "is-caret"));
     const q = $("#question");
@@ -537,7 +941,14 @@
     const el = $("#farewell-thanks");
     buildTyped(el, text);
     el.focus({ preventScroll: true });
-    type(el, { speed: 120, volume: 0.35, onDone: () => later(() => ($("#again").hidden = false), 1200) });
+    type(el, {
+      speed: 120,
+      volume: 0.35,
+      onDone: () => later(() => {
+        $("#keepsake").hidden = false;
+        $("#again").hidden = false;
+      }, 1200),
+    });
   }
 
   function resetFarewell() {
@@ -553,6 +964,8 @@
     thanks.textContent = "";
     $("#heart").classList.remove("is-shown");
     $("#again").hidden = true;
+    $("#keepsake").hidden = true;
+    keepsakeStatus("");
     $("#petals").replaceChildren();
   }
 
@@ -914,6 +1327,18 @@
     );
     $("#note-form").addEventListener("submit", sendNote);
     $("#again").addEventListener("click", () => goTo("threshold"));
+    $("#ticket-btn").addEventListener("click", saveTicket);
+    $("#share-btn").addEventListener("click", shareForest);
+    setupPlacard();
+    isNarrow.addEventListener("change", setupPlacard);
+    $(".placard").addEventListener("click", blowPlacard);
+    $(".placard").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        blowPlacard();
+      }
+    });
+    $("#placard-return").addEventListener("click", returnPlacard);
     $("#music-toggle").addEventListener("click", toggleMute);
     $("#music-credit").href = CONFIG.appleMusicUrl;
     // The artwork src is set here rather than in the HTML, so link previews don't pick it up.
@@ -923,18 +1348,19 @@
 
     document.addEventListener("keydown", (e) => {
       if (e.key !== " " && e.key !== "Enter") return;
-      if (e.target.closest("button, a, input, textarea, select, iframe, [contenteditable]")) return;
+      if (e.target.closest("button, a, input, textarea, select, iframe, [contenteditable], .placard")) return;
       e.preventDefault();
       skip();
     });
 
     $("#gallery").addEventListener("click", (e) => {
-      if (e.target.closest("button, a, input, textarea, label, form")) return;
+      if (e.target.closest("button, a, input, textarea, label, form, .placard")) return;
       skip();
     });
 
     window.addEventListener("resize", () => {
       if (ambient.running) sizeAmbient();
+      if (fall.raf) sizeFall();
     });
   }
 
