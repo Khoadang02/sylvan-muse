@@ -74,6 +74,8 @@ window.TRANSLATIONS = {
         "Cảm ơn bạn đã ghé thăm phòng tranh. Tình cảm của bạn đã được gửi tới tác giả rồi.",
       thanksNo:
         "Cảm ơn bạn đã ghé qua. Khu rừng vẫn luôn ở đây, chờ bạn quay lại.",
+      thanksSkip: "Cảm ơn bạn đã ghé thăm phòng tranh. Mong khu rừng đã cho bạn một chút bình yên.",
+      close: "Đóng",
       again: "Dạo lại một vòng",
       ticket: "Lưu vé tham quan",
       share: "Chia sẻ khu rừng này",
@@ -162,6 +164,8 @@ window.TRANSLATIONS = {
         "Thank you for visiting this gallery. Your love has been sent to the artist.",
       thanksNo:
         "Thank you for walking through. The forest will be here whenever you return.",
+      thanksSkip: "Thank you for visiting this gallery. I hope the forest gave you a moment of quiet.",
+      close: "Close",
       again: "Visit again",
       ticket: "Save your ticket",
       share: "Share this forest",

@@ -550,12 +550,20 @@
     );
   }
 
+  // On phones the placard starts tucked away, so nothing covers the walker;
+  // a small "Details" button offers it instead.
   function resetPlacard() {
     const card = $(".placard");
     card.getAnimations().forEach((a) => a.cancel());
-    card.classList.remove("is-gone");
+    card.classList.toggle("is-gone", isNarrow.matches);
     delete card.dataset.moving;
     $("#placard-return").hidden = true;
+  }
+
+  function showPlacard() {
+    const card = $(".placard");
+    card.classList.add("is-shown");
+    if (card.classList.contains("is-gone")) $("#placard-return").hidden = false;
   }
 
   /* ---------- Story: the light he saw ---------- */
@@ -831,7 +839,7 @@
       startMusic();
       later(() => scenes.hall.classList.add("is-lit"), 600);
       later(startAmbient, 3000);
-      later(() => $(".placard").classList.add("is-shown"), 5000);
+      later(showPlacard, 5000);
       state.stanzaTimer = later(() => showStanza(0), 8000);
       later(showQuestion, CONFIG.questionDelayMs);
     },
@@ -843,6 +851,8 @@
         releasePetals();
         $("#note-form").hidden = false;
         if (!isNarrow.matches) $("#note").focus({ preventScroll: true });
+        // the ticket and sharing are there even if she never sends a note
+        later(() => ($("#keepsake").hidden = false), 1800);
       } else {
         showThanks(t("farewell.thanksNo"));
       }
@@ -1057,7 +1067,7 @@
         break;
       case "hall": {
         scenes.hall.classList.add("is-lit");
-        $(".placard").classList.add("is-shown");
+        showPlacard();
         startAmbient();
         if (state.typing) state.typing.finish();
         else if (state.stanzaIndex < $$("#poem .stanza").length - 1) showStanza(state.stanzaIndex + 1);
@@ -1326,6 +1336,10 @@
       })
     );
     $("#note-form").addEventListener("submit", sendNote);
+    $("#note-close").addEventListener("click", () => {
+      $("#note-form").hidden = true;
+      showThanks(t("farewell.thanksSkip"));
+    });
     $("#again").addEventListener("click", () => goTo("threshold"));
     $("#ticket-btn").addEventListener("click", saveTicket);
     $("#share-btn").addEventListener("click", shareForest);

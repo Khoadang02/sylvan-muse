@@ -720,7 +720,24 @@ button { font: inherit; color: inherit; }
   24%      { transform: scale(1); }
 }
 
-.note-form { display: grid; gap: 0.9rem; width: 100%; justify-items: center; }
+.note-form { position: relative; display: grid; gap: 0.9rem; width: 100%; justify-items: center; }
+.note-form__close {
+  position: absolute;
+  top: -0.2rem;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid rgba(243, 231, 201, 0.2);
+  border-radius: 50%;
+  background: rgba(13, 11, 8, 0.4);
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: border-color 0.4s, color 0.4s;
+}
+.note-form__close:hover, .note-form__close:focus-visible { border-color: var(--c-honey); color: var(--c-honey); }
 .note-form__label { font-family: var(--font-script); font-size: 1.35rem; }
 .note-form textarea {
   width: 100%;
@@ -743,6 +760,7 @@ button { font: inherit; color: inherit; }
   line-height: 1.5;
 }
 .farewell__thanks:focus { outline: none; }
+.farewell__thanks:empty { display: none; }
 
 /* keepsakes: a ticket to keep, and a way to share */
 .keepsake {
