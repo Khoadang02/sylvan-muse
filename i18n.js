@@ -43,7 +43,7 @@ window.TRANSLATIONS = {
       yearLabel: "Ngày chụp",
       artworkTitle: "Nơi thơ nở",
       photographer: "Khoazd",
-      signature: "For Evie",
+      signature: "Tặng Evie",
       place: "Conkle's Hollow, Hocking Hills, Ohio",
       year: "18 tháng 10, 2026",
       poemLabel: "Bài thơ",
