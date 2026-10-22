@@ -191,7 +191,7 @@
       for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
 
       keys.out = ctx.createGain();
-      keys.out.gain.value = 0.22; // kept low: in the background, never over the words
+      keys.out.gain.value = 0.32; // soft, but clearly there — never over the words
       const warm = ctx.createBiquadFilter();
       warm.type = "lowpass";
       warm.frequency.value = 3400;
