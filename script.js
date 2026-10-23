@@ -650,7 +650,7 @@
     return lines;
   }
 
-  async function makeTicket() {
+  async function makeTicket(name = "") {
     const W = 1080, H = 1680;
     await Promise.all([
       document.fonts.load('600 80px "Dancing Script"', "Nơi thơ nở"),
@@ -760,37 +760,168 @@
     ctx.fillStyle = soft;
     ctx.font = '400 26px "Be Vietnam Pro", sans-serif';
     ctx.fillText(`${t("ticket.visited")}: ${fmt.format(when)}`, x0 + 70, stubY + 170);
-    ctx.textAlign = "right";
-    ctx.font = '500 24px "Be Vietnam Pro", sans-serif';
-    ctx.letterSpacing = "3px";
-    ctx.fillText(t("ticket.number"), x0 + cw - 70, stubY + 105);
-    ctx.letterSpacing = "0px";
+    // her name, pressed on in red ink over the stub
+    drawStamp(ctx, x0 + cw - 185, stubY + 140, 118, name, when);
 
     return new Promise((resolve) => c.toBlob(resolve, "image/png"));
+  }
+
+  // A round rubber stamp: double ring, the gallery's name over the top,
+  // ticket number and date under the bottom, the name in the middle,
+  // and the ink worn a little where the stamp didn't press evenly.
+  function drawStamp(ctx, cx, cy, r, name, when) {
+    const pad = 16;
+    const size = (r + pad) * 2;
+    const s = document.createElement("canvas");
+    s.width = s.height = size;
+    const g = s.getContext("2d");
+    const ink = "#a3262a";
+    g.translate(size / 2, size / 2);
+    g.strokeStyle = g.fillStyle = ink;
+
+    g.lineWidth = 6;
+    g.beginPath();
+    g.arc(0, 0, r - 3, 0, Math.PI * 2);
+    g.stroke();
+    g.lineWidth = 2;
+    g.beginPath();
+    g.arc(0, 0, r - 16, 0, Math.PI * 2);
+    g.stroke();
+    g.beginPath();
+    g.arc(0, 0, r - 58, 0, Math.PI * 2);
+    g.stroke();
+
+    const date = new Intl.DateTimeFormat(t("ticket.stampLocale"), { day: "2-digit", month: "2-digit", year: "numeric" })
+      .format(when)
+      .replace(/\D+/g, " · ");
+    g.textBaseline = "middle";
+    g.font = '600 21px "Be Vietnam Pro", sans-serif';
+    arcText(g, t("ticket.stampTop"), r - 37, true, 5);
+    g.font = '600 19px "Be Vietnam Pro", sans-serif';
+    arcText(g, date, r - 37, false, 3);
+    // two small stars where the rings meet
+    g.font = '500 16px "Be Vietnam Pro", sans-serif';
+    g.textAlign = "center";
+    g.fillText("★", -(r - 37), 0);
+    g.fillText("★", r - 37, 0);
+
+    // the name, as large as fits inside the inner ring (two lines if it is long)
+    const label = (name || t("ticket.stampGuest")).trim();
+    const room = (r - 62) * 1.85;
+    const fit = (lines, start, min) => {
+      let px = start;
+      do {
+        g.font = `700 ${px}px "Dancing Script", cursive`;
+        if (lines.every((l) => g.measureText(l).width <= room)) return px;
+        px -= 2;
+      } while (px > min);
+      return px;
+    };
+    let lines = [label];
+    let px = fit(lines, 54, 24);
+    if (px <= 24 && label.includes(" ")) {
+      const words = label.split(/\s+/);
+      const cut = Math.ceil(words.length / 2);
+      lines = [words.slice(0, cut).join(" "), words.slice(cut).join(" ")];
+      px = fit(lines, 40, 16);
+    } else if (px <= 24) {
+      px = fit(lines, 24, 14);
+    }
+    const lineH = px * 0.95;
+    const nameY = lines.length === 1 ? -8 : -8 - lineH / 2;
+    lines.forEach((l, i) => g.fillText(l, 0, nameY + i * lineH));
+    // the ticket number, small, under the name
+    g.font = '600 15px "Be Vietnam Pro", sans-serif';
+    g.fillText(t("ticket.number").toUpperCase(), 0, nameY + (lines.length - 1) * lineH + px * 0.7 + 16);
+
+    // wear the ink: tiny gaps and a couple of light streaks
+    g.globalCompositeOperation = "destination-out";
+    for (let i = 0; i < 700; i++) {
+      g.globalAlpha = 0.25 + Math.random() * 0.75;
+      g.beginPath();
+      g.arc((Math.random() - 0.5) * size, (Math.random() - 0.5) * size, 0.4 + Math.random() * 1.6, 0, Math.PI * 2);
+      g.fill();
+    }
+    g.globalAlpha = 0.35;
+    g.lineWidth = 9;
+    for (let i = 0; i < 3; i++) {
+      g.beginPath();
+      const a0 = Math.random() * Math.PI * 2;
+      g.arc(0, 0, r * (0.3 + Math.random() * 0.7), a0, a0 + 0.6 + Math.random() * 0.8);
+      g.stroke();
+    }
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(-0.21);
+    ctx.globalAlpha = 0.88;
+    ctx.globalCompositeOperation = "multiply";
+    ctx.drawImage(s, -size / 2, -size / 2);
+    ctx.restore();
+  }
+
+  // letters set around a circle: over the top (reading left to right) or under the bottom
+  function arcText(g, text, radius, top, spacing) {
+    const chars = Array.from(text);
+    const widths = chars.map((ch) => g.measureText(ch).width + spacing);
+    const total = widths.reduce((a, b) => a + b, 0) - spacing;
+    let angle = top ? -Math.PI / 2 - total / radius / 2 : Math.PI / 2 + total / radius / 2;
+    g.textAlign = "center";
+    chars.forEach((ch, i) => {
+      const half = widths[i] / 2 / radius;
+      angle += top ? half : -half;
+      g.save();
+      g.rotate(angle);
+      g.translate(radius, 0);
+      g.rotate(top ? Math.PI / 2 : -Math.PI / 2);
+      g.fillText(ch, 0, 0);
+      g.restore();
+      angle += top ? half : -half;
+    });
   }
 
   function keepsakeStatus(text) {
     $("#keepsake-status").textContent = text;
   }
 
-  async function saveTicket() {
-    const btn = $("#ticket-btn");
+  function askName() {
+    const form = $("#ticket-name");
+    form.hidden = !form.hidden;
+    keepsakeStatus("");
+    if (!form.hidden) $("#ticket-name-input").focus({ preventScroll: true });
+  }
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+
+  async function saveTicket(event) {
+    event.preventDefault();
+    const btn = $("#ticket-print");
+    const name = $("#ticket-name-input").value.trim().slice(0, 24);
     btn.disabled = true;
     try {
-      const blob = await makeTicket();
+      const blob = await makeTicket(name);
       const file = new File([blob], t("ticket.file"), { type: "image/png" });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: t("hall.artworkTitle") });
+        try {
+          await navigator.share({ files: [file], title: t("hall.artworkTitle") });
+        } catch (err) {
+          // if the tap has "expired" while the ticket was drawn, fall back to a download
+          if (err && err.name === "NotAllowedError") downloadBlob(blob, file.name);
+          else throw err;
+        }
       } else {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = file.name;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        downloadBlob(blob, file.name);
       }
+      $("#ticket-name").hidden = true;
       keepsakeStatus(t("farewell.saved"));
     } catch (err) {
       if (err && err.name !== "AbortError") console.error(err);
@@ -1028,6 +1159,7 @@
     $("#heart").classList.remove("is-shown");
     $("#again").hidden = true;
     $("#keepsake").hidden = true;
+    $("#ticket-name").hidden = true;
     keepsakeStatus("");
     $("#petals").replaceChildren();
   }
@@ -1395,7 +1527,8 @@
       showThanks(t("farewell.thanksSkip"));
     });
     $("#again").addEventListener("click", () => goTo("threshold"));
-    $("#ticket-btn").addEventListener("click", saveTicket);
+    $("#ticket-btn").addEventListener("click", askName);
+    $("#ticket-name").addEventListener("submit", saveTicket);
     $("#share-btn").addEventListener("click", shareForest);
     setupPlacard();
     isNarrow.addEventListener("change", setupPlacard);

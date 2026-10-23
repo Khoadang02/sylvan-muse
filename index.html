@@ -147,6 +147,13 @@
             <span data-i18n="farewell.share"></span>
           </button>
         </div>
+        <form class="ticket-name" id="ticket-name" novalidate hidden>
+          <label for="ticket-name-input" class="ticket-name__label" data-i18n="farewell.namePrompt"></label>
+          <div class="ticket-name__row">
+            <input id="ticket-name-input" name="name" type="text" maxlength="24" autocomplete="given-name" data-i18n-attr="placeholder:farewell.namePlaceholder">
+            <button type="submit" class="pill pill--warm" id="ticket-print" data-i18n="farewell.print"></button>
+          </div>
+        </form>
         <p class="keepsake__status" id="keepsake-status" role="status"></p>
 
         <button type="button" class="again" id="again" data-i18n="farewell.again" hidden></button>

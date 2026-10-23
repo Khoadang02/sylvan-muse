@@ -789,6 +789,29 @@ button { font: inherit; color: inherit; }
   background: rgba(220, 174, 99, 0.08);
 }
 .keepsake__link[disabled] { opacity: 0.6; cursor: progress; }
+/* asking her name before the ticket is printed */
+.ticket-name {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: center;
+  width: min(22rem, 100%);
+  animation: fade-in 0.8s var(--ease) both;
+}
+.ticket-name__label { font-family: var(--font-script); font-size: 1.2rem; }
+.ticket-name__row { display: flex; gap: 0.5rem; width: 100%; }
+.ticket-name input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(13, 11, 8, 0.55);
+  color: var(--text);
+  font: 400 1.15rem/1.2 var(--font-script);
+}
+.ticket-name input::placeholder { color: var(--text-faint); }
+.ticket-name input:focus-visible { outline: none; border-color: var(--c-honey); }
+
 .keepsake__status { min-height: 1.2em; margin: -0.8rem 0 0; font-size: 0.8rem; color: var(--text-soft); }
 
 .again {
