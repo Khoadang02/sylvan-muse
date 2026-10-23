@@ -221,8 +221,9 @@
       wet.gain.value = 0.2;
       soften.connect(room).connect(wet).connect(ctx.destination);
 
-      // quiet room tone under the typing (soft brown noise), faded in per scene
-      const bedBuf = ctx.createBuffer(1, Math.floor(rate * 4), rate);
+      // wind through the trees under the welcome and story, faded in per scene:
+      // soft brown noise, a slowly wandering band of whoosh, and gusts that swell and settle
+      const bedBuf = ctx.createBuffer(1, Math.floor(rate * 6), rate);
       const b = bedBuf.getChannelData(0);
       let last = 0;
       for (let i = 0; i < b.length; i++) {
@@ -232,13 +233,28 @@
       keys.bed = ctx.createBufferSource();
       keys.bed.buffer = bedBuf;
       keys.bed.loop = true;
-      const bedTone = ctx.createBiquadFilter();
-      bedTone.type = "lowpass";
-      bedTone.frequency.value = 700;
+      const whoosh = ctx.createBiquadFilter();
+      whoosh.type = "bandpass";
+      whoosh.frequency.value = 520;
+      whoosh.Q.value = 0.6;
+      const drift = ctx.createOscillator();
+      drift.frequency.value = 0.05;
+      const driftDepth = ctx.createGain();
+      driftDepth.gain.value = 220;
+      drift.connect(driftDepth).connect(whoosh.frequency);
+      const gusts = ctx.createGain();
+      gusts.gain.value = 0.65;
+      const gust = ctx.createOscillator();
+      gust.frequency.value = 0.08;
+      const gustDepth = ctx.createGain();
+      gustDepth.gain.value = 0.35;
+      gust.connect(gustDepth).connect(gusts.gain);
       keys.bedGain = ctx.createGain();
       keys.bedGain.gain.value = 0;
-      keys.bed.connect(bedTone).connect(keys.bedGain).connect(ctx.destination);
+      keys.bed.connect(whoosh).connect(gusts).connect(keys.bedGain).connect(ctx.destination);
       keys.bed.start();
+      drift.start();
+      gust.start();
     }
     if (keys.ctx.state === "suspended") keys.ctx.resume();
   }
@@ -249,7 +265,44 @@
     const t = keys.ctx.currentTime;
     g.cancelScheduledValues(t);
     g.setValueAtTime(g.value, t);
-    g.linearRampToValueAtTime(on && !music.muted ? 0.02 : 0, t + (on ? 3 : 4));
+    g.linearRampToValueAtTime(on && !music.muted ? 0.05 : 0, t + (on ? 3 : 4));
+    clearTimeout(keys.rustleTimer);
+    if (on) keys.rustleTimer = setTimeout(rustleLoop, 2500);
+  }
+
+  // a few dry leaves stirring somewhere nearby
+  function rustleLoop() {
+    if (soundOn(1)) {
+      const t0 = keys.ctx.currentTime;
+      const count = 6 + Math.floor(Math.random() * 8);
+      const v = 0.05 + Math.random() * 0.05;
+      for (let i = 0; i < count; i++) {
+        const at = t0 + Math.random() * 0.45;
+        noiseBurst(at, 0.012 + Math.random() * 0.02, { type: "highpass", freq: 2200 + Math.random() * 1600, gain: v * (0.4 + Math.random() * 0.6), attack: 0.003 });
+      }
+    }
+    keys.rustleTimer = setTimeout(rustleLoop, 2500 + Math.random() * 3500);
+  }
+
+  // the doors open: a warm, slow chord that swells with the light
+  function doorChime() {
+    if (!soundOn(1)) return;
+    const ctx = keys.ctx;
+    const t0 = ctx.currentTime + 0.05;
+    [[220, 0.035], [329.6, 0.028], [440, 0.022], [554.4, 0.018], [1318.5, 0.006]].forEach(([f, g], i) => {
+      const o = ctx.createOscillator();
+      o.type = "sine";
+      o.frequency.value = f;
+      o.detune.value = (Math.random() - 0.5) * 8;
+      const env = ctx.createGain();
+      const start = t0 + i * 0.09;
+      env.gain.setValueAtTime(0.0001, start);
+      env.gain.exponentialRampToValueAtTime(g, start + 0.9);
+      env.gain.exponentialRampToValueAtTime(0.0001, start + 4.5);
+      o.connect(env).connect(keys.out);
+      o.start(start);
+      o.stop(start + 4.6);
+    });
   }
 
   function noiseBurst(t, dur, { type = "bandpass", freq = 3000, q = 1, gain = 0.2, attack = 0.004, rate = 1 }) {
@@ -1315,6 +1368,7 @@
     if (state.scene !== "threshold" || !state.entered) return;
     state.lang = lang;
     initKeySounds();
+    doorChime();
     applyTranslations();
     const bloom = $("#bloom");
     bloom.classList.remove("is-opening");
