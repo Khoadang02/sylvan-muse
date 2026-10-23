@@ -789,19 +789,54 @@ button { font: inherit; color: inherit; }
   background: rgba(220, 174, 99, 0.08);
 }
 .keepsake__link[disabled] { opacity: 0.6; cursor: progress; }
-/* asking her name before the ticket is printed */
-.ticket-name {
-  display: grid;
-  gap: 0.6rem;
-  justify-items: center;
-  width: min(22rem, 100%);
-  animation: fade-in 0.8s var(--ease) both;
+/* asking her name before the ticket is printed: a small card over a blurred page.
+   It sits in the upper part of the screen so a phone keyboard never covers it. */
+.name-dialog {
+  width: min(24rem, calc(100vw - 32px));
+  max-width: none;
+  margin: max(14vh, 64px) auto auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  overflow: visible;
 }
-.ticket-name__label { font-family: var(--font-script); font-size: 1.2rem; }
-.ticket-name__row { display: flex; gap: 0.5rem; width: 100%; }
+.name-dialog[open] { animation: dialog-in 0.6s var(--ease); }
+.name-dialog::backdrop {
+  background: rgba(13, 11, 8, 0.55);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  animation: fade-in 0.6s var(--ease);
+}
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+}
+@media (min-width: 861px) {
+  .name-dialog { margin-top: max(26vh, 64px); }
+}
+
+.ticket-name {
+  position: relative;
+  display: grid;
+  gap: 0.9rem;
+  justify-items: center;
+  padding: 1.7rem 1.4rem 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: linear-gradient(160deg, rgba(36, 30, 20, 0.96), rgba(18, 15, 10, 0.96));
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.8);
+  text-align: center;
+}
+.ticket-name__title {
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--c-honey);
+}
+.ticket-name__label { font-family: var(--font-script); font-size: 1.3rem; line-height: 1.4; }
 .ticket-name input {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
   padding: 0.6rem 1rem;
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -811,6 +846,24 @@ button { font: inherit; color: inherit; }
 }
 .ticket-name input::placeholder { color: var(--text-faint); }
 .ticket-name input:focus-visible { outline: none; border-color: var(--c-honey); }
+.ticket-name .pill { min-width: 9rem; }
+.name-dialog__close {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid rgba(243, 231, 201, 0.2);
+  border-radius: 50%;
+  background: none;
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: border-color 0.4s, color 0.4s;
+}
+.name-dialog__close:hover, .name-dialog__close:focus-visible { border-color: var(--c-honey); color: var(--c-honey); }
 
 .keepsake__status { min-height: 1.2em; margin: -0.8rem 0 0; font-size: 0.8rem; color: var(--text-soft); }
 

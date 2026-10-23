@@ -885,10 +885,18 @@
   }
 
   function askName() {
-    const form = $("#ticket-name");
-    form.hidden = !form.hidden;
+    const dialog = $("#name-dialog");
     keepsakeStatus("");
-    if (!form.hidden) $("#ticket-name-input").focus({ preventScroll: true });
+    if (dialog.showModal) dialog.showModal();
+    else dialog.setAttribute("open", "");
+    $("#ticket-name-input").focus({ preventScroll: true });
+  }
+
+  function closeName() {
+    const dialog = $("#name-dialog");
+    if (!dialog.open) return;
+    if (dialog.close) dialog.close();
+    else dialog.removeAttribute("open");
   }
 
   function downloadBlob(blob, filename) {
@@ -921,7 +929,7 @@
       } else {
         downloadBlob(blob, file.name);
       }
-      $("#ticket-name").hidden = true;
+      closeName();
       keepsakeStatus(t("farewell.saved"));
     } catch (err) {
       if (err && err.name !== "AbortError") console.error(err);
@@ -1159,7 +1167,7 @@
     $("#heart").classList.remove("is-shown");
     $("#again").hidden = true;
     $("#keepsake").hidden = true;
-    $("#ticket-name").hidden = true;
+    closeName();
     keepsakeStatus("");
     $("#petals").replaceChildren();
   }
@@ -1529,6 +1537,11 @@
     $("#again").addEventListener("click", () => goTo("threshold"));
     $("#ticket-btn").addEventListener("click", askName);
     $("#ticket-name").addEventListener("submit", saveTicket);
+    $("#name-close").addEventListener("click", closeName);
+    // a tap on the blurred page outside the card closes it too
+    $("#name-dialog").addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) closeName();
+    });
     $("#share-btn").addEventListener("click", shareForest);
     setupPlacard();
     isNarrow.addEventListener("change", setupPlacard);

@@ -147,19 +147,25 @@
             <span data-i18n="farewell.share"></span>
           </button>
         </div>
-        <form class="ticket-name" id="ticket-name" novalidate hidden>
-          <label for="ticket-name-input" class="ticket-name__label" data-i18n="farewell.namePrompt"></label>
-          <div class="ticket-name__row">
-            <input id="ticket-name-input" name="name" type="text" maxlength="24" autocomplete="given-name" data-i18n-attr="placeholder:farewell.namePlaceholder">
-            <button type="submit" class="pill pill--warm" id="ticket-print" data-i18n="farewell.print"></button>
-          </div>
-        </form>
         <p class="keepsake__status" id="keepsake-status" role="status"></p>
 
         <button type="button" class="again" id="again" data-i18n="farewell.again" hidden></button>
       </div>
     </section>
   </main>
+
+  <!-- Asking her name for the ticket: a small card over a softly blurred page -->
+  <dialog class="name-dialog" id="name-dialog" aria-labelledby="name-dialog-title">
+    <form class="ticket-name" id="ticket-name" novalidate>
+      <button type="button" class="name-dialog__close" id="name-close" data-i18n-attr="aria-label:farewell.close">
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+      <p class="ticket-name__title" id="name-dialog-title" data-i18n="farewell.nameTitle"></p>
+      <label for="ticket-name-input" class="ticket-name__label" data-i18n="farewell.namePrompt"></label>
+      <input id="ticket-name-input" name="name" type="text" maxlength="24" autocomplete="given-name" data-i18n-attr="placeholder:farewell.namePlaceholder">
+      <button type="submit" class="pill pill--warm" id="ticket-print" data-i18n="farewell.print"></button>
+    </form>
+  </dialog>
 
   <!-- Music: a small sound toggle, credited to Apple Music -->
   <div class="music" id="music" hidden>
