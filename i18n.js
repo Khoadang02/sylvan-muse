@@ -20,7 +20,7 @@ window.TRANSLATIONS = {
     },
     entrance: {
       welcome: "Chào mừng bạn.",
-      line2: "Hãy bước vào thật chậm nhé.",
+      line2: "Hãy bước vào thật chậm nhé!",
       cue: "Chạm để bước vào",
     },
     story: {
@@ -111,7 +111,7 @@ window.TRANSLATIONS = {
     },
     entrance: {
       welcome: "Welcome.",
-      line2: "Please walk slowly.",
+      line2: "Please walk slowly!",
       cue: "Tap to enter",
     },
     story: {
