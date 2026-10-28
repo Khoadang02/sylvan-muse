@@ -75,3 +75,9 @@ Each push to `main` redeploys automatically.
 3. HTTPS is issued automatically.
 
 After switching domains, send one test note from the new domain; FormSubmit may ask to activate it again.
+
+## License
+
+The code is under the [MIT License](LICENSE). The photograph, the poem and the written text are
+© 2026 Khoa Dang (Khoazd), all rights reserved. "Holocene" belongs to Bon Iver and is only streamed
+as Apple Music's preview. See [LICENSE](LICENSE) for details.
