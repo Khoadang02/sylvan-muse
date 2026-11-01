@@ -1569,6 +1569,8 @@
 
     $("#gallery").addEventListener("click", (e) => {
       if (e.target.closest("button, a, input, textarea, label, form, .placard")) return;
+      // in the main hall, a tap on the photograph is for looking, not for moving on
+      if (state.scene === "hall" && !e.target.closest(".hall__panel")) return;
       skip();
     });
 
