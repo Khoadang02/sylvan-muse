@@ -153,6 +153,11 @@ button { font: inherit; color: inherit; }
   color: var(--text-faint);
 }
 .threshold__prompt .dot { margin: 0 0.6em; }
+@media (max-width: 600px) {
+  .threshold__prompt { line-height: 1.9; }
+  .threshold__prompt span:not(.dot) { display: block; }
+  .threshold__prompt .dot { display: none; }
+}
 
 .threshold__choices {
   position: relative;
@@ -586,6 +591,7 @@ button { font: inherit; color: inherit; }
 .question__choices { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 
 .pill {
+  min-height: 44px;
   padding: 0.7rem 1.3rem;
   border: 1px solid rgba(243, 231, 201, 0.25);
   border-radius: 999px;
@@ -676,9 +682,12 @@ button { font: inherit; color: inherit; }
 }
 .music__track { font-family: var(--font-script); font-size: 1rem; white-space: nowrap; }
 .music__credit {
-  font-size: 0.66rem;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.75rem;
   letter-spacing: 0.04em;
-  color: var(--text-soft);
+  color: var(--text);
   text-decoration: none;
   white-space: nowrap;
 }
@@ -721,6 +730,12 @@ button { font: inherit; color: inherit; }
 }
 
 .note-form { position: relative; display: grid; gap: 0.9rem; width: 100%; justify-items: center; }
+.note-form__close::before,
+.name-dialog__close::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+}
 .note-form__close {
   position: absolute;
   top: -0.2rem;
@@ -773,6 +788,7 @@ button { font: inherit; color: inherit; }
 .keepsake__link {
   display: inline-flex;
   align-items: center;
+  min-height: 44px;
   gap: 0.45rem;
   padding: 0.55rem 1.05rem;
   border: 1px solid rgba(220, 174, 99, 0.45);
@@ -868,11 +884,14 @@ button { font: inherit; color: inherit; }
 .keepsake__status { min-height: 1.2em; margin: -0.8rem 0 0; font-size: 0.8rem; color: var(--text-soft); }
 
 .again {
+  min-height: 44px;
   margin-top: 0.4rem;
-  padding: 0.5rem 0.9rem;
+  padding: 0 0.9rem;
   border: 0;
-  border-bottom: 1px solid var(--line);
   background: none;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 7px;
   color: var(--text-faint);
   font-size: 0.75rem;
   letter-spacing: 0.2em;
@@ -880,7 +899,7 @@ button { font: inherit; color: inherit; }
   cursor: pointer;
   animation: fade-in 2s var(--ease) both 1.5s;
 }
-.again:hover, .again:focus-visible { color: var(--c-honey); border-color: var(--c-honey); }
+.again:hover, .again:focus-visible { color: var(--c-honey); text-decoration-color: var(--c-honey); }
 
 .petals { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .petal {
@@ -907,16 +926,16 @@ button { font: inherit; color: inherit; }
   transform: translateX(-50%);
   margin: 0;
   z-index: 10;
-  font-size: 0.66rem;
-  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--text-faint);
+  color: var(--text-soft);
   white-space: nowrap;
   opacity: 0;
   transition: opacity 1.5s var(--ease);
   pointer-events: none;
 }
-.hint.is-shown { opacity: 0.7; }
+.hint.is-shown { opacity: 0.9; }
 
 /* ==========================================================
    Tablet & phone: the photograph fills the room; words float
@@ -936,7 +955,7 @@ button { font: inherit; color: inherit; }
     aspect-ratio: auto;
   }
   .artwork__frame { border-radius: 0; box-shadow: none; }
-  .signature { right: 22px; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 92px); font-size: 1.6rem; }
+  .signature { right: 22px; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 112px); font-size: 1.6rem; }
 
   .scene--hall::after {
     content: "";
@@ -1000,7 +1019,8 @@ button { font: inherit; color: inherit; }
     z-index: 3;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.42rem 0.8rem 0.42rem 0.6rem;
+    min-height: 44px;
+    padding: 0 0.95rem 0 0.75rem;
     border: 1px solid rgba(220, 174, 99, 0.45);
     border-radius: 999px;
     background: rgba(13, 11, 8, 0.5);
@@ -1025,7 +1045,7 @@ button { font: inherit; color: inherit; }
   .stanza.is-past { opacity: 0; }
 
   .question__prompt { font-size: 1.2rem; margin-bottom: 0.7rem; }
-  .pill { font-size: 0.85rem; padding: 0.6rem 1.05rem; }
+  .pill { font-size: 0.85rem; padding: 0.6rem 1.15rem; }
 
   /* stack the credit under the button so it stays clear of the placard */
   .music { flex-direction: column; align-items: flex-end; gap: 0.3rem; }
